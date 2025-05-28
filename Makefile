@@ -1,7 +1,9 @@
-APP_NAME = questlines
+BIN_NAME = questlines
 BIN_DIR = bin
 
-TARGET = $(BIN_DIR)/$(APP_NAME)
+VUE_DIR = frontend
+
+TARGET = $(BIN_DIR)/$(BIN_NAME)
 
 .PHONY:	all
 all:	build
@@ -16,7 +18,7 @@ clean:
 build:	build_vue	build_go
 
 .PHONY:	run
-run:	run_vue	run_go
+run:	run_go
 
 # ======== backend ========
 
@@ -38,8 +40,10 @@ test_go:
 .PHONY:	build_vue
 build_vue:
 	@echo "Building frontend..."
-	npm --prefix frontend run build
+	npm --prefix $(VUE_DIR) i
+	npm --prefix $(VUE_DIR) run build
 
 .PHONY:	run_vue
 run_vue:
-	npm --prefix frontend run dev
+	npm --prefix $(VUE_DIR) i
+	npm --prefix $(VUE_DIR) run dev
