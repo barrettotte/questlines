@@ -1,11 +1,11 @@
 <script setup lang="ts">
   import { storeToRefs } from 'pinia';
-  import { Plus, Trash2, Save, Download, UploadCloud, FileJson, FileText, Zap } from 'lucide-vue-next';
+  import { Plus, Trash2, Save, Download, UploadCloud, FileJson, FileText, Zap, Moon, Sun } from 'lucide-vue-next';
 
   import { useQuestStore } from '../stores/questStore';
 
   const store = useQuestStore();
-  const { currQuestline, isLoading } = storeToRefs(store);
+  const { currQuestline, isLoading, darkMode } = storeToRefs(store);
 
 </script>
 
@@ -14,6 +14,15 @@
     <span class="toolbar-title">Questlines</span>
     <input type="text" class="toolbar-input" placeholder="Questline Name" v-model="currQuestline.name"/>
 
+    <!-- Quest actions -->
+    <div class="toolbar-group">
+      <button class="btn btn-info" @click="store.addQuestNode" title="Add New Quest">
+        <Zap :size="16" class="btn-icon"/> Add Quest
+      </button>
+    </div>
+    <div class="toolbar-divider"></div>
+
+    <!-- Questline actions -->
     <div class="toolbar-group">
       <button class="btn btn-primary" @click="store.loadQuestline(null)" title="New Questline">
         <Plus :size="16" class="btn-icon"/> New
@@ -24,16 +33,13 @@
       <button class="btn btn-success" @click="store.saveCurrentQuestline" :disabled="isLoading" title="Save Questline">
         <Save :size="16" class="btn-icon"/> {{ isLoading ? 'Saving...' : 'Save' }}
       </button>
-    </div>
-    <div class="toolbar-divider"></div>
-
-    <div class="toolbar-group">
-      <button class="btn btn-info" @click="store.addQuestNode" title="Add New Quest">
-        <Zap :size="16" class="btn-icon"/> Add Quest
+      <button class="btn btn-danger" @click="store.deleteCurrentQuestline" :disabled="isLoading" title="Delete Saved Questline">
+        <Trash2 :size="16" class="btn-icon"/> Delete
       </button>
     </div>
     <div class="toolbar-divider"></div>
 
+    <!-- Misc actions -->
     <div class="toolbar-group">
       <div class="toolbar-export-menu">
         <button class="btn btn-info" title="Export">
@@ -48,8 +54,12 @@
           </a>
         </div>
       </div>
-      <button class="btn btn-danger" @click="store.deleteCurrentQuestline" :disabled="isLoading" title="Delete Saved Questline">
-        <Trash2 :size="16" class="btn-icon"/> Delete
+    </div>
+
+    <div class="toolbar-group" style="margin-left: auto;">
+      <button class="btn btn-secondary icon-only" @click="store.toggleDarkMode" :title="darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'">
+        <Moon v-if="!darkMode" :size="16" class="btn-icon"/>
+        <Sun v-else :size="16" class="btn-icon"/>
       </button>
     </div>
 

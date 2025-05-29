@@ -1,6 +1,6 @@
 import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
-import { type Connection, type Node, Position, type Edge } from '@vue-flow/core';
+import { type Connection, type Node, Position, type Edge, MarkerType } from '@vue-flow/core';
 
 import { apiService } from '../services/api';
 import type { Questline, Quest, Dependency, QuestlineInfo } from '../types';
@@ -19,6 +19,7 @@ export const useQuestStore = defineStore('quest', () => {
   const selectedQuestForEdit = ref<Quest | null>(null);
   const showQuestEditor = ref(false);
   const showLoadModal = ref(false);
+  const darkMode = ref(false);
 
   // computed values
   const nodes = computed<Node[]>(() =>
@@ -33,18 +34,26 @@ export const useQuestStore = defineStore('quest', () => {
     }))
   );
 
-  const edges = computed<Edge[]>(() =>
-    currQuestline.value.dependencies.map((dep: Dependency, idx: number): Edge => ({
+  const edges = computed<Edge[]>(() => {
+    const lightColor = '#6b7280';
+    const darkColor = '#a0aec0';
+    const strokeColor = darkMode.value ? darkColor : lightColor;
+
+    return currQuestline.value.dependencies.map((dep: Dependency, idx: number): Edge => ({
       id: `edge-${dep.from}-${dep.to}-${idx}`,
       source: dep.from,
       target: dep.to,
       animated: true,
       style: {
-        stroke: '#3b82f6',
+        stroke: strokeColor,
         strokeWidth: 2
-      }
-    }))
-  );
+      },
+      markerEnd: {
+        type: MarkerType.ArrowClosed,
+        color: strokeColor,
+      },
+    }));
+  });
 
   // handlers
   function handleError(e: unknown, msg: string) {
@@ -247,14 +256,31 @@ export const useQuestStore = defineStore('quest', () => {
     apiService.exportQuestline(currQuestline.value.id, fmt);
   }
 
+  function applyDarkMode(active: boolean) {
+    darkMode.value = active;
+    localStorage.setItem('darkMode', String(active));
+    if (active) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }
+
+  function toggleDarkMode() {
+    applyDarkMode(!darkMode.value);
+  }
+
+  const storedDarkMode = localStorage.getItem('darkMode');
+  applyDarkMode(storedDarkMode === 'true');
+
   return {
     // properties
     currQuestline, allQuestlines, isLoading, error, nodes, edges,
-    selectedQuestForEdit, showQuestEditor, showLoadModal,
+    selectedQuestForEdit, showQuestEditor, showLoadModal, darkMode,
     // functions
     fetchAllQuestlines, loadQuestline, saveCurrentQuestline, deleteCurrentQuestline,
     addQuestNode, updateQuestPosition, addQuestDependency, removeQuestNode,
     removeQuestDependency, openQuestForEdit, closeQuestEditor, updateQuestDetails,
-    toggleLoadModal, triggerExport,
+    toggleLoadModal, triggerExport, toggleDarkMode,
   };
 });

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 
   import { VueFlow, useVueFlow } from '@vue-flow/core'
-  import type { Connection, NodeDragEvent } from '@vue-flow/core';
-  import { Background, BackgroundVariant } from '@vue-flow/background'
+  import type { Connection, EdgeChange, NodeChange, NodeDragEvent } from '@vue-flow/core';
+  import { Background } from '@vue-flow/background'
   import { Controls } from '@vue-flow/controls'
   import { MiniMap } from '@vue-flow/minimap'
 
@@ -13,8 +13,8 @@
   import CustomNode from './CustomNode.vue'
 
   const store = useQuestStore();
-  const { nodes, edges } = storeToRefs(store);
-  const { onNodeDragStop, onConnect, onEdgesChange, onNodesChange, fitView } = useVueFlow()
+  const { nodes, edges, darkMode } = storeToRefs(store);
+  const { onNodeDragStop, onConnect, onEdgesChange, onNodesChange } = useVueFlow()
 
   onNodeDragStop((event: NodeDragEvent) => {
     store.updateQuestPosition(event.node.id, event.node.position);
@@ -24,15 +24,17 @@
     store.addQuestDependency(conn);
   });
 
-  // delete via delete key
-  onEdgesChange((changes) => {
+  // delete edge via delete key
+  onEdgesChange((changes: EdgeChange[]) => {
     changes.forEach(change => {
       if (change.type === 'remove') {
         store.removeQuestDependency(change.id);
       }
     });
   });
-  onNodesChange((changes) => {
+
+  // delete node via delete key
+  onNodesChange((changes: NodeChange[]) => {
     changes.forEach(change => {
       if (change.type === 'remove') {
         // TODO:
@@ -48,7 +50,6 @@
 
   watch(nodes, async() => {
     await nextTick(); // wait for DOM update
-    fitView();
   }, { deep: true, immediate: true });
 
 </script>
@@ -59,15 +60,22 @@
       :nodes="nodes"
       :edges="edges"
       :node-types="nodeTypes"
-      class="basicflow"
+      :class="{ 'dark': darkMode, 'quest-board-canvas': true }"
       :fit-view-on-init="true"
       delete-key-code="Delete"
       :box-selection-key-code="'Shift'"
       :multi-selection-key-code="'Shift'"
     >
-      <Background :variant="BackgroundVariant.Dots" :gap="24" :size="1" color="#ccc"/>
+      <Background :variant="'lines'" :gap="20" :size="2" :color="darkMode ? '#474747' : '#d9d9d9'"/>
+      
+      <MiniMap pannable zoomable class="custom-minimap" 
+        :node-stroke-color="darkMode ? '#a0aec0' : '#6b7280'"
+        :node-color="darkMode ? '#4a5568' : '#fff'"
+        :node-border-radius="2"
+      />
+
       <Controls position="top-right"/>
-      <MiniMap pannable zoomable/>
+
     </VueFlow>
   </div>
 </template>
@@ -77,9 +85,11 @@
     width: 100%;
     height: 100%;
   }
+
   .quest-board-canvas {
     width: 100%;
     height: 100%;
-    background-color: #e9e9e9;
+    background-color: var(--bg-color);
+    transition: background-color 0.2s ease;
   }
 </style>

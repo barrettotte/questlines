@@ -9,7 +9,7 @@
   import { useQuestStore } from './stores/questStore';
 
   const store = useQuestStore();
-  const { error, isLoading } = storeToRefs(store);
+  const { error, isLoading, darkMode } = storeToRefs(store);
 
   onMounted(() => {
     store.fetchAllQuestlines();
@@ -19,7 +19,7 @@
 </script>
 
 <template>
-  <div id="app-container">
+  <div id="app-container" :class="{ 'dark': darkMode }">
     <Toolbar/>
     <main>
       <QuestBoard/>
@@ -43,6 +43,9 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
 
   main {
