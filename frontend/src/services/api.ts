@@ -36,7 +36,7 @@ export const apiService = {
         await apiClient.delete(`/questlines/${id}`);
     },
 
-    exportQuestline(id: string, format: 'json' | 'yaml'): void {
+    exportQuestline(id: string, format: string): void {
         window.location.href = `${API_BASE}/questlines/${id}/export?format=${format}`;
     },
 };

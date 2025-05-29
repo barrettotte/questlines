@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import { storeToRefs } from 'pinia';
-  import { Plus, Trash2, Save, Download, UploadCloud, FileJson, FileText, Zap, Moon, Sun } from 'lucide-vue-next';
+  import { Plus, Trash2, Save, Download, UploadCloud, FileJson, Zap, Moon, Sun } from 'lucide-vue-next';
 
   import { useQuestStore } from '../stores/questStore';
   import type { ExposedQuestBoard } from '../types';
@@ -62,9 +62,6 @@
         <div class="dropdown-content">
           <a href="#" @click.prevent="store.triggerExport('json')">
             <FileJson :size="16"/> JSON
-          </a>
-          <a href="#" @click.prevent="store.triggerExport('yaml')">
-            <FileText :size="16"/> YAML
           </a>
         </div>
       </div>

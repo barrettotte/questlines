@@ -244,7 +244,7 @@ export const useQuestStore = defineStore('quest', () => {
     }
   }
 
-  function triggerExport(fmt: 'json' | 'yaml') {
+  function triggerExport(fmt: string) {
     if (!currQuestline.value.id || !(allQuestlines.value as Questline[]).some((q: Questline) => q.id === currQuestline.value.id)) {
       error.value = 'Please save questline before exporting';
       setTimeout(() => error.value = null, 3000);

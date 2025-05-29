@@ -136,9 +136,6 @@ func ExportQuestlineHandler(w http.ResponseWriter, r *http.Request) {
 	fileName := toExport.Name + "." + fmt
 
 	switch fmt {
-	case "yaml":
-		respondError(w, http.StatusBadRequest, "TODO: YAML export is not supported yet")
-		return
 	case "json":
 		data, err = json.MarshalIndent(toExport, "", "  ")
 		contentType = "application/json"
