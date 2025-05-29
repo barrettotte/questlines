@@ -3,20 +3,34 @@
   import { Plus, Trash2, Save, Download, UploadCloud, FileJson, FileText, Zap, Moon, Sun } from 'lucide-vue-next';
 
   import { useQuestStore } from '../stores/questStore';
+  import type { ExposedQuestBoard } from '../types';
 
   const store = useQuestStore();
   const { currQuestline, isLoading, darkMode } = storeToRefs(store);
+
+  const props = defineProps<{
+    questBoardInstance: ExposedQuestBoard | null
+  }>();
+
+  const handleAddQuest = () => {
+    if (props.questBoardInstance && typeof props.questBoardInstance.addNewQuestAtViewportCenter === 'function') {
+      props.questBoardInstance.addNewQuestAtViewportCenter();
+    } else {
+      console.warn("QuestBoard instance or method not available in Toolbar.");
+      store.addQuestNode({ x: Math.random() * 200 + 50, y: Math.random() * 200 + 50 });
+    }
+  };
 
 </script>
 
 <template>
   <div class="toolbar">
     <span class="toolbar-title">Questlines</span>
-    <input type="text" class="toolbar-input" placeholder="Questline Name" v-model="currQuestline.name"/>
+    <input type="text" class="toolbar-input" placeholder="Questline Name" name="questline-name" v-model="currQuestline.name"/>
 
     <!-- Quest actions -->
     <div class="toolbar-group">
-      <button class="btn btn-info" @click="store.addQuestNode" title="Add New Quest">
+      <button class="btn btn-info" @click="handleAddQuest" title="Add New Quest">
         <Zap :size="16" class="btn-icon"/> Add Quest
       </button>
     </div>

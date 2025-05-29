@@ -1,9 +1,9 @@
 import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
-import { type Connection, type Node, Position, type Edge, MarkerType } from '@vue-flow/core';
+import { type Connection, type Node, type Edge, MarkerType } from '@vue-flow/core';
 
 import { apiService } from '../services/api';
-import type { Questline, Quest, Dependency, QuestlineInfo } from '../types';
+import type { Questline, Quest, Dependency, QuestlineInfo, Position as QuestPosition } from '../types';
 
 export const useQuestStore = defineStore('quest', () => {
   // state
@@ -29,8 +29,6 @@ export const useQuestStore = defineStore('quest', () => {
       label: q.title,
       position: q.position,
       data: q,
-      sourcePosition: Position.Right,
-      targetPosition: Position.Left,
     }))
   );
 
@@ -158,16 +156,15 @@ export const useQuestStore = defineStore('quest', () => {
     }
   }
 
-  function addQuestNode() {
+  function addQuestNode(pos?: { x: number, y: number }) {
+    const defaultPos: QuestPosition = { x: 100, y: 100 };
+    const finalPos: QuestPosition = pos || defaultPos;
     const newQuestId = crypto.randomUUID();
     const newQuest: Quest = {
       id: newQuestId,
       title: 'New Quest',
       description: '',
-      position: {
-        x: Math.random() * 400 + 50,
-        y: Math.random() * 300 + 50,
-      },
+      position: finalPos,
       color: '#cccccc',
     };
     currQuestline.value.quests.push(newQuest);

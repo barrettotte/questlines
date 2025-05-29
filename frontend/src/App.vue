@@ -1,15 +1,18 @@
-<script setup="ts">
+<script setup lang="ts">
   import { storeToRefs } from 'pinia';
-  import { onMounted } from 'vue';
+  import { onMounted, ref } from 'vue';
 
   import Toolbar from './components/Toolbar.vue';
   import QuestBoard from './components/QuestBoard.vue';
   import QuestEditor from './components/QuestEditor.vue';
   import LoadModal from './components/LoadModal.vue';
   import { useQuestStore } from './stores/questStore';
+  import type { ExposedQuestBoard } from './types';
 
   const store = useQuestStore();
   const { error, isLoading, darkMode } = storeToRefs(store);
+
+  const questBoardRef = ref<ExposedQuestBoard | null>(null);
 
   onMounted(() => {
     store.fetchAllQuestlines();
@@ -20,9 +23,9 @@
 
 <template>
   <div id="app-container" :class="{ 'dark': darkMode }">
-    <Toolbar/>
+    <Toolbar :quest-board-instance="questBoardRef"/>
     <main>
-      <QuestBoard/>
+      <QuestBoard ref="questBoardRef"/>
     </main>
     <QuestEditor/>
     <LoadModal/>

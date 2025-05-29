@@ -52,6 +52,30 @@
     await nextTick(); // wait for DOM update
   }, { deep: true, immediate: true });
 
+  const { project, dimensions, viewport } = useVueFlow();
+
+  function addNewQuestAtViewportCenter() {
+    let newQuestPosition = { x: 100, y: 100 }; // fallback
+
+    if (dimensions.value.width > 0 && dimensions.value.height > 0) {
+      const paneCenterX = dimensions.value.width / 2;
+      const paneCenterY = dimensions.value.height / 2;
+      const flowCenter = project({ x: paneCenterX, y: paneCenterY });
+      newQuestPosition = { x: flowCenter.x, y: flowCenter.y };
+    } else {
+      newQuestPosition = {
+        x: -viewport.value.x + 100,
+        y: -viewport.value.y + 100,
+      };
+      console.warn("VueFlow dimensions not found, using fallback position");
+    }
+    store.addQuestNode(newQuestPosition);
+  }
+
+  defineExpose({
+    addNewQuestAtViewportCenter
+  });
+
 </script>
 
 <template>
@@ -67,7 +91,7 @@
       :multi-selection-key-code="'Shift'"
     >
       <Background :variant="'lines'" :gap="20" :size="2" :color="darkMode ? '#474747' : '#d9d9d9'"/>
-      
+
       <MiniMap pannable zoomable class="custom-minimap" 
         :node-stroke-color="darkMode ? '#a0aec0' : '#6b7280'"
         :node-color="darkMode ? '#4a5568' : '#fff'"

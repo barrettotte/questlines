@@ -29,3 +29,7 @@ export interface QuestlineInfo {
     id: string;
     name: string;
 }
+
+export interface ExposedQuestBoard {
+    addNewQuestAtViewportCenter: () => void;
+}
