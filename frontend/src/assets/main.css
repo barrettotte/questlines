@@ -37,6 +37,8 @@
 
   --minimap-bg: rgba(245, 245, 245, 0.85);
   --minimap-border: #777;
+
+  --vue-flow-selected: #3b82f6;
 }
 
 .dark {
@@ -372,7 +374,12 @@ main {
   border-color: var(--node-border);
   box-shadow: 0 2px 5px rgba(0,0,0,0.1);
   font-size: 14px;
-  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  transition: transform 0.15s ease-in-out, box-shadow 0.15s ease-in-out, border-color 0.15s ease-in-out;
+}
+.quest-node:hover {
+  transform: scale(1.03);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  border-color: var(--vue-flow-selected);
 }
 
 .quest-node-header {
@@ -526,12 +533,12 @@ html .dark .vue-flow__minimap-mask {
 }
 
 .vue-flow__edge-custom.selected .vue-flow__edge-path {
-  stroke: #3b82f6 !important;
+  stroke: var(--vue-flow-selected) !important;
   stroke-width: 2.5 !important;
 }
 .vue-flow__edge-custom.selected .vue-flow__marker path {
-  fill: #3b82f6 !important;
-  stroke: #3b82f6 !important;
+  fill: var(--vue-flow-selected) !important;
+  stroke: var(--vue-flow-selected) !important;
 }
 
 /******** Load and error messages ********/

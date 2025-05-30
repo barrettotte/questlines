@@ -30,7 +30,7 @@
 </script>
 
 <template>
-  <div class="quest-node" :style="nodeStyle">
+  <div class="quest-node" :style="nodeStyle" :title="questData.title">
     <div class="quest-node-header">{{ questData.title || 'Untitled' }}</div>
     <div v-if="questData.description" class="quest-node-description">
       {{ questData.description }}
