@@ -41,7 +41,7 @@ test_go:
 build_vue:
 	@echo "Building frontend..."
 	npm --prefix $(VUE_DIR) i
-	npm --prefix $(VUE_DIR) run build
+	npm --prefix $(VUE_DIR) run build_dev
 
 .PHONY:	run_vue
 run_vue:

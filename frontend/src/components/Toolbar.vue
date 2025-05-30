@@ -6,7 +6,7 @@
   import type { ExposedQuestBoard } from '../types';
 
   const store = useQuestStore();
-  const { currQuestline, isLoading, darkMode } = storeToRefs(store);
+  const { currQuestline, isLoading, isDarkMode } = storeToRefs(store);
 
   const props = defineProps<{
     questBoardInstance: ExposedQuestBoard | null
@@ -68,8 +68,8 @@
     </div>
 
     <div class="toolbar-group" style="margin-left: auto;">
-      <button class="btn btn-secondary icon-only" @click="store.toggleDarkMode" :title="darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'">
-        <Moon v-if="!darkMode" :size="16" class="btn-icon"/>
+      <button class="btn btn-secondary icon-only" @click="store.toggleDarkMode" :title="isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'">
+        <Moon v-if="!isDarkMode" :size="16" class="btn-icon"/>
         <Sun v-else :size="16" class="btn-icon"/>
       </button>
     </div>

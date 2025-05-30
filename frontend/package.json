@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
+    "build_dev": "vue-tsc -b && vite build --mode development",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -16,6 +17,7 @@
     "axios": "^1.9.0",
     "lucide-vue-next": "^0.511.0",
     "pinia": "^3.0.2",
+    "uuid": "^11.1.0",
     "vue": "^3.5.13"
   },
   "devDependencies": {

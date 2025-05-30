@@ -13,7 +13,7 @@
   import CustomNode from './CustomNode.vue'
 
   const store = useQuestStore();
-  const { nodes, edges, darkMode } = storeToRefs(store);
+  const { nodes, edges, isDarkMode } = storeToRefs(store);
   const { onNodeDragStop, onConnect, onEdgesChange, onNodesChange } = useVueFlow()
 
   onNodeDragStop((event: NodeDragEvent) => {
@@ -84,17 +84,17 @@
       :nodes="nodes"
       :edges="edges"
       :node-types="nodeTypes"
-      :class="{ 'dark': darkMode, 'quest-board-canvas': true }"
+      :class="{ 'dark': isDarkMode, 'quest-board-canvas': true }"
       :fit-view-on-init="true"
       delete-key-code="Delete"
       :box-selection-key-code="'Shift'"
       :multi-selection-key-code="'Shift'"
     >
-      <Background :variant="'lines'" :gap="20" :size="2" :color="darkMode ? '#474747' : '#d9d9d9'"/>
+      <Background :variant="'lines'" :gap="20" :size="2" :color="isDarkMode ? '#474747' : '#d9d9d9'"/>
 
       <MiniMap pannable zoomable class="custom-minimap" 
-        :node-stroke-color="darkMode ? '#a0aec0' : '#6b7280'"
-        :node-color="darkMode ? '#4a5568' : '#fff'"
+        :node-stroke-color="isDarkMode ? '#a0aec0' : '#6b7280'"
+        :node-color="isDarkMode ? '#4a5568' : '#fff'"
         :node-border-radius="2"
       />
 

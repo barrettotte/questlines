@@ -10,7 +10,7 @@
   import type { ExposedQuestBoard } from './types';
 
   const store = useQuestStore();
-  const { error, isLoading, darkMode } = storeToRefs(store);
+  const { error, isLoading, isDarkMode } = storeToRefs(store);
 
   const questBoardRef = ref<ExposedQuestBoard | null>(null);
 
@@ -22,7 +22,7 @@
 </script>
 
 <template>
-  <div id="app-container" :class="{ 'dark': darkMode }">
+  <div id="app-container" :class="{ 'dark': isDarkMode }">
     <Toolbar :quest-board-instance="questBoardRef"/>
     <main>
       <QuestBoard ref="questBoardRef"/>

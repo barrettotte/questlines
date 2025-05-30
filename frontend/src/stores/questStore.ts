@@ -1,11 +1,13 @@
 import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
 import { type Connection, type Node, type Edge, MarkerType } from '@vue-flow/core';
+import { v4 as uuidv4 } from 'uuid';
 
 import { apiService } from '../services/api';
 import type { Questline, Quest, Dependency, QuestlineInfo, Position as QuestPosition } from '../types';
 
 export const useQuestStore = defineStore('quest', () => {
+  
   // state
   const currQuestline = ref<Questline>({
     id: null,
@@ -13,14 +15,17 @@ export const useQuestStore = defineStore('quest', () => {
     quests: [],
     dependencies: [],
   });
+
   const allQuestlines = ref<QuestlineInfo[]>([]);
-  const isLoading = ref(false);
-  const error = ref<string | null>(null);
   const selectedQuestForEdit = ref<Quest | null>(null);
+  
+  const isLoading = ref(false);
+  const isDarkMode = ref(false);
   const showQuestEditor = ref(false);
   const showLoadModal = ref(false);
-  const darkMode = ref(false);
 
+  const error = ref<string | null>(null);
+  
   // computed values
   const nodes = computed<Node[]>(() =>
     currQuestline.value.quests.map((q: Quest): Node<Quest> => ({
@@ -35,10 +40,10 @@ export const useQuestStore = defineStore('quest', () => {
   const edges = computed<Edge[]>(() => {
     const lightColor = '#6b7280';
     const darkColor = '#a0aec0';
-    const strokeColor = darkMode.value ? darkColor : lightColor;
+    const strokeColor = isDarkMode.value ? darkColor : lightColor;
 
     return currQuestline.value.dependencies.map((dep: Dependency, idx: number): Edge => ({
-      id: `edge-${dep.from}-${dep.to}-${idx}`,
+      id: getEdgeId(dep, idx),
       source: dep.from,
       target: dep.to,
       animated: true,
@@ -61,6 +66,10 @@ export const useQuestStore = defineStore('quest', () => {
     setTimeout(() => (error.value = null), 5000);
   }
 
+  function getEdgeId(dep: Dependency, idx: number): string {
+    return `edge-${dep.from}-${dep.to}-${idx}`
+  }
+
   async function fetchAllQuestlines() {
     isLoading.value = true;
     error.value = null;
@@ -78,7 +87,7 @@ export const useQuestStore = defineStore('quest', () => {
   async function loadQuestline(id: string | null) {
     if (!id) {
       currQuestline.value = {
-        id: crypto.randomUUID(),
+        id: uuidv4(),
         name: 'Untitled',
         quests: [],
         dependencies: [],
@@ -159,7 +168,7 @@ export const useQuestStore = defineStore('quest', () => {
   function addQuestNode(pos?: { x: number, y: number }) {
     const defaultPos: QuestPosition = { x: 100, y: 100 };
     const finalPos: QuestPosition = pos || defaultPos;
-    const newQuestId = crypto.randomUUID();
+    const newQuestId = uuidv4();
     const newQuest: Quest = {
       id: newQuestId,
       title: 'New Quest',
@@ -215,7 +224,7 @@ export const useQuestStore = defineStore('quest', () => {
 
   function removeQuestDependency(edgeId: string) {
     currQuestline.value.dependencies = currQuestline.value.dependencies.filter((dep: Dependency, idx: number) => {
-      `edge-${dep.from}-${dep.to}-${idx}` !== edgeId;
+      return getEdgeId(dep, idx) !== edgeId
     });
   }
 
@@ -254,8 +263,9 @@ export const useQuestStore = defineStore('quest', () => {
   }
 
   function applyDarkMode(active: boolean) {
-    darkMode.value = active;
-    localStorage.setItem('darkMode', String(active));
+    isDarkMode.value = active;
+    localStorage.setItem('isDarkMode', String(active));
+
     if (active) {
       document.documentElement.classList.add('dark');
     } else {
@@ -264,16 +274,15 @@ export const useQuestStore = defineStore('quest', () => {
   }
 
   function toggleDarkMode() {
-    applyDarkMode(!darkMode.value);
+    applyDarkMode(!isDarkMode.value);
   }
 
-  const storedDarkMode = localStorage.getItem('darkMode');
-  applyDarkMode(storedDarkMode === 'true');
+  applyDarkMode(localStorage.getItem('isDarkMode') === 'true');
 
   return {
     // properties
     currQuestline, allQuestlines, isLoading, error, nodes, edges,
-    selectedQuestForEdit, showQuestEditor, showLoadModal, darkMode,
+    selectedQuestForEdit, showQuestEditor, showLoadModal, isDarkMode,
     // functions
     fetchAllQuestlines, loadQuestline, saveCurrentQuestline, deleteCurrentQuestline,
     addQuestNode, updateQuestPosition, addQuestDependency, removeQuestNode,
