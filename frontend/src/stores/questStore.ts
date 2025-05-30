@@ -9,15 +9,11 @@ import type { Questline, Quest, Dependency, QuestlineInfo, Position as QuestPosi
 export const useQuestStore = defineStore('quest', () => {
   
   // state
-  const currQuestline = ref<Questline>({
-    id: null,
-    name: 'New Questline',
-    quests: [],
-    dependencies: [],
-  });
-
   const allQuestlines = ref<QuestlineInfo[]>([]);
   const selectedQuestForEdit = ref<Quest | null>(null);
+
+  const hoveredNodeId = ref<string | null>(null);
+  const hoveredEdgeId = ref<string | null>(null);
   
   const isLoading = ref(false);
   const isDarkMode = ref(false);
@@ -25,6 +21,13 @@ export const useQuestStore = defineStore('quest', () => {
   const showLoadModal = ref(false);
 
   const error = ref<string | null>(null);
+
+  const currQuestline = ref<Questline>({
+    id: null,
+    name: 'New Questline',
+    quests: [],
+    dependencies: [],
+  });
   
   // computed values
   const nodes = computed<Node[]>(() =>
@@ -39,8 +42,15 @@ export const useQuestStore = defineStore('quest', () => {
 
   const edges = computed<Edge[]>(() => {
     const baseStrokeColor = isDarkMode.value ? '#a0aec0' : '#6b7280';
+    const currHoveredNode = hoveredNodeId.value;
+    const currHoveredEdge = hoveredEdgeId.value;
 
     return currQuestline.value.dependencies.map((dep: Dependency, idx: number): Edge => {
+      const isDirectlyHovered = currHoveredEdge === getEdgeId(dep, idx);
+      const isConnectedToHoveredNode = currHoveredNode && (dep.from === currHoveredNode || dep.to === currHoveredEdge);
+      const shouldUseHightlight = isDirectlyHovered || isConnectedToHoveredNode;
+      const strokeWidth = shouldUseHightlight ? 2.5 : 1.5;
+
       return {
         id: getEdgeId(dep, idx),
         source: dep.from,
@@ -49,7 +59,8 @@ export const useQuestStore = defineStore('quest', () => {
         animated: true,
         style: {
           stroke: baseStrokeColor,
-          strokeWidth: 1.5,
+          strokeWidth: strokeWidth,
+          transition: 'stroke 0.05s ease-out, stroke-width 0.05s ease-out',
         },
         markerEnd: {
           type: MarkerType.ArrowClosed,
@@ -280,17 +291,24 @@ export const useQuestStore = defineStore('quest', () => {
   function toggleDarkMode() {
     applyDarkMode(!isDarkMode.value);
   }
-
   applyDarkMode(localStorage.getItem('isDarkMode') === 'true');
+
+  function setHoveredNodeId(id: string | null) {
+    hoveredNodeId.value = id;
+  }
+
+  function setHoveredEdgeId(id: string | null) {
+    hoveredEdgeId.value = id;
+  }
 
   return {
     // properties
     currQuestline, allQuestlines, isLoading, error, nodes, edges, selectedQuestForEdit, 
-    showQuestEditor, showLoadModal, isDarkMode,
+    showQuestEditor, showLoadModal, isDarkMode, hoveredNodeId, hoveredEdgeId,
     // functions
     fetchAllQuestlines, loadQuestline, saveCurrentQuestline, deleteCurrentQuestline,
     addQuestNode, updateQuestPosition, addQuestDependency, removeQuestNode,
     removeQuestDependencies, openQuestForEdit, closeQuestEditor, updateQuestDetails,
-    toggleLoadModal, triggerExport, toggleDarkMode,
+    toggleLoadModal, triggerExport, toggleDarkMode, setHoveredNodeId, setHoveredEdgeId,
   };
 });

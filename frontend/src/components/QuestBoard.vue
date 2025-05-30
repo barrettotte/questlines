@@ -1,7 +1,7 @@
 <script setup lang="ts">
 
   import { VueFlow, useVueFlow } from '@vue-flow/core'
-  import type { Connection, EdgeChange, NodeDragEvent } from '@vue-flow/core';
+  import type { Connection, EdgeChange, EdgeMouseEvent, NodeDragEvent, NodeMouseEvent } from '@vue-flow/core';
   import { Background } from '@vue-flow/background'
   import { Controls } from '@vue-flow/controls'
   import { MiniMap } from '@vue-flow/minimap'
@@ -46,6 +46,26 @@
     store.removeQuestDependencies(idsToRemove);
   });
 
+  const onNodeMouseEnter = (event: NodeMouseEvent) => {
+    store.setHoveredNodeId(event.node.id);
+  };
+
+  const onNodeMouseLeave = (event: NodeMouseEvent) => {
+    if (store.hoveredNodeId === event.node.id) {
+      store.setHoveredNodeId(null);
+    }
+  };
+
+  const onEdgeMouseEnter = (event: EdgeMouseEvent) => {
+    store.setHoveredEdgeId(event.edge.id);
+  };
+
+  const onEdgeMouseLeave = (event: EdgeMouseEvent) => {
+    if (store.hoveredEdgeId === event.edge.id) {
+      store.setHoveredEdgeId(null);
+    }
+  };
+
   function addNewQuestAtViewportCenter() {
     let newQuestPosition = { x: 100, y: 100 }; // fallback
 
@@ -77,6 +97,10 @@
       :delete-key-code="'Delete'"
       :box-selection-key-code="'Shift'"
       :multi-selection-key-code="'Shift'"
+      @node-mouse-enter="onNodeMouseEnter"
+      @node-mouse-leave="onNodeMouseLeave"
+      @edge-mouse-enter="onEdgeMouseEnter"
+      @edge-mouse-leave="onEdgeMouseLeave"
     >
       <Background :variant="'lines'" :gap="20" :size="2" :color="isDarkMode ? '#474747' : '#d9d9d9'"/>
 
