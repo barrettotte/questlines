@@ -38,24 +38,25 @@ export const useQuestStore = defineStore('quest', () => {
   );
 
   const edges = computed<Edge[]>(() => {
-    const lightColor = '#6b7280';
-    const darkColor = '#a0aec0';
-    const strokeColor = isDarkMode.value ? darkColor : lightColor;
+    const baseStrokeColor = isDarkMode.value ? '#a0aec0' : '#6b7280';
 
-    return currQuestline.value.dependencies.map((dep: Dependency, idx: number): Edge => ({
-      id: getEdgeId(dep, idx),
-      source: dep.from,
-      target: dep.to,
-      animated: true,
-      style: {
-        stroke: strokeColor,
-        strokeWidth: 2
-      },
-      markerEnd: {
-        type: MarkerType.ArrowClosed,
-        color: strokeColor,
-      },
-    }));
+    return currQuestline.value.dependencies.map((dep: Dependency, idx: number): Edge => {
+      return {
+        id: getEdgeId(dep, idx),
+        source: dep.from,
+        target: dep.to,
+        type: 'custom',
+        animated: true,
+        style: {
+          stroke: baseStrokeColor,
+          strokeWidth: 1.5,
+        },
+        markerEnd: {
+          type: MarkerType.ArrowClosed,
+          color: baseStrokeColor,
+        },
+      };
+    });
   });
 
   // handlers
@@ -281,8 +282,8 @@ export const useQuestStore = defineStore('quest', () => {
 
   return {
     // properties
-    currQuestline, allQuestlines, isLoading, error, nodes, edges,
-    selectedQuestForEdit, showQuestEditor, showLoadModal, isDarkMode,
+    currQuestline, allQuestlines, isLoading, error, nodes, edges, selectedQuestForEdit, 
+    showQuestEditor, showLoadModal, isDarkMode,
     // functions
     fetchAllQuestlines, loadQuestline, saveCurrentQuestline, deleteCurrentQuestline,
     addQuestNode, updateQuestPosition, addQuestDependency, removeQuestNode,

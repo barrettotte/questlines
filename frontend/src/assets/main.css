@@ -1,10 +1,12 @@
-/******** VueFlow ********/
+/******** VueFlow styles ********/
+
 @import '@vue-flow/core/dist/style.css';
 @import '@vue-flow/core/dist/theme-default.css';
 @import '@vue-flow/controls/dist/style.css';
 @import '@vue-flow/minimap/dist/style.css';
 
 /******** Global ********/
+
 :root {
   --primary-color: #007bff;
   --secondary-color: #6c757d;
@@ -87,6 +89,7 @@ main {
 }
 
 /******** Buttons ********/
+
 .btn {
   display: inline-flex;
   align-items: center;
@@ -161,6 +164,7 @@ main {
 }
 
 /******** Input ********/
+
 .input-field, .textarea-field {
   padding: 8px 12px;
   border: 1px solid var(--border-color);
@@ -174,6 +178,7 @@ main {
 }
 
 /******** Toolbar ********/
+
 .toolbar {
   background-color: var(--toolbar-bg);
   color: var(--toolbar-text);
@@ -260,6 +265,7 @@ main {
 }
 
 /******** Modal ********/
+
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -353,6 +359,7 @@ main {
 }
 
 /******** Quest node ********/
+
 .quest-node {
   border-width: 2px;
   border-style: solid;
@@ -464,27 +471,19 @@ html .dark .vue-flow__minimap-mask {
   fill: rgba(40, 50, 70, 0.9);
 }
 
-.dark .vue-flow__handle {
-  border: 1px solid #aaa;
-  background-color: #333;
-}
-.dark .vue-flow__handle:hover {
-    background-color: var(--primary-color);
-    border-color: var(--primary-color);
-}
 .dark .vue-flow__edge-text {
-    fill: var(--text-color);
+  fill: var(--text-color);
 }
 .dark .vue-flow__controls {
-    box-shadow: 0 0 10px rgba(0,0,0,0.4);
+  box-shadow: 0 0 10px rgba(0,0,0,0.4);
 }
 .dark .vue-flow__controls-button {
-    background: #4a5568;
-    color: #e2e8f0;
-    border-bottom: 1px solid #2d3748;
+  background: #4a5568;
+  color: #e2e8f0;
+  border-bottom: 1px solid #2d3748;
 }
 .dark .vue-flow__controls-button:hover {
-    background: #718096;
+  background: #718096;
 }
 
 .vue-flow__handle {
@@ -498,6 +497,15 @@ html .dark .vue-flow__minimap-mask {
   border-color: var(--primary-color);
 }
 
+.dark .vue-flow__handle {
+  border: 1px solid #aaa;
+  background-color: #333;
+}
+.dark .vue-flow__handle:hover {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
 .vue-flow__handle-connecting {
   background-color: var(--success-color) !important;
 }
@@ -506,7 +514,28 @@ html .dark .vue-flow__minimap-mask {
   background-color: var(--warning-color) !important;
 }
 
-/******** Loading and error messages ********/
+.vue-flow__edge-custom .vue-flow__edge-path {
+  cursor: pointer;
+  pointer-events: stroke;
+  fill: none;
+  transition: stroke 0.15s ease-in-out, stroke-width 0.15s ease-in-out;
+}
+
+.vue-flow__edge-custom:hover .vue-flow__edge-path {
+  stroke-width: 2.5 !important;
+}
+
+.vue-flow__edge-custom.selected .vue-flow__edge-path {
+  stroke: #3b82f6 !important;
+  stroke-width: 2.5 !important;
+}
+.vue-flow__edge-custom.selected .vue-flow__marker path {
+  fill: #3b82f6 !important;
+  stroke: #3b82f6 !important;
+}
+
+/******** Load and error messages ********/
+
 .global-message {
   position: fixed;
   bottom: 20px;
@@ -529,6 +558,7 @@ html .dark .vue-flow__minimap-mask {
 }
 
 /******** Color picker ********/
+
 .color-swatches {
   display: flex;
   flex-wrap: wrap;

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 
   import { VueFlow, useVueFlow } from '@vue-flow/core'
-  import type { Connection, EdgeChange, NodeChange, NodeDragEvent } from '@vue-flow/core';
+  import type { Connection, EdgeChange, NodeDragEvent } from '@vue-flow/core';
   import { Background } from '@vue-flow/background'
   import { Controls } from '@vue-flow/controls'
   import { MiniMap } from '@vue-flow/minimap'
@@ -10,11 +10,21 @@
   import { watch, nextTick } from 'vue'
 
   import { useQuestStore } from '../stores/questStore'
+  import CustomEdge from './CustomEdge.vue';
   import CustomNode from './CustomNode.vue'
 
   const store = useQuestStore();
   const { nodes, edges, isDarkMode } = storeToRefs(store);
-  const { onNodeDragStop, onConnect, onEdgesChange, onNodesChange } = useVueFlow()
+  const { onNodeDragStop, onEdgesChange, onConnect, project, dimensions, viewport } = useVueFlow();
+
+  const edgeTypes = { custom: CustomEdge, };
+  const nodeTypes = { custom: CustomNode, };
+
+  defineExpose({ addNewQuestAtViewportCenter });
+
+  watch(nodes, async() => {
+    await nextTick(); // wait for DOM update
+  }, { deep: true, immediate: true });
 
   onNodeDragStop((event: NodeDragEvent) => {
     store.updateQuestPosition(event.node.id, event.node.position);
@@ -24,35 +34,14 @@
     store.addQuestDependency(conn);
   });
 
-  // delete edge via delete key
   onEdgesChange((changes: EdgeChange[]) => {
-    changes.forEach(change => {
+    changes.forEach((change: EdgeChange) => {
       if (change.type === 'remove') {
         store.removeQuestDependency(change.id);
       }
     });
   });
 
-  // delete node via delete key
-  onNodesChange((changes: NodeChange[]) => {
-    changes.forEach(change => {
-      if (change.type === 'remove') {
-        // TODO:
-        // store.removeQuestNode(change.id);
-        console.warn('Node deletion via delete key disabled')
-      }
-    });
-  });
-
-  const nodeTypes = {
-    custom: CustomNode,
-  };
-
-  watch(nodes, async() => {
-    await nextTick(); // wait for DOM update
-  }, { deep: true, immediate: true });
-
-  const { project, dimensions, viewport } = useVueFlow();
 
   function addNewQuestAtViewportCenter() {
     let newQuestPosition = { x: 100, y: 100 }; // fallback
@@ -71,11 +60,6 @@
     }
     store.addQuestNode(newQuestPosition);
   }
-
-  defineExpose({
-    addNewQuestAtViewportCenter
-  });
-
 </script>
 
 <template>
@@ -84,9 +68,10 @@
       :nodes="nodes"
       :edges="edges"
       :node-types="nodeTypes"
+      :edge-types="edgeTypes"
       :class="{ 'dark': isDarkMode, 'quest-board-canvas': true }"
       :fit-view-on-init="true"
-      delete-key-code="Delete"
+      :delete-key-code="'Delete'"
       :box-selection-key-code="'Shift'"
       :multi-selection-key-code="'Shift'"
     >
