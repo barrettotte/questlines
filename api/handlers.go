@@ -43,12 +43,16 @@ func GetQuestlinesHandler(w http.ResponseWriter, r *http.Request) {
 // CreateQuestlineHandler handles POST /api.questlines
 func CreateQuestlineHandler(w http.ResponseWriter, r *http.Request) {
 	var toCreate models.Questline
+
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&toCreate); err != nil {
+		log.Printf("Bad payload: %s", r.Body)
 		respondError(w, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
 	defer r.Body.Close()
+
+	log.Printf("Creating questline\n%v", toCreate)
 
 	created, err := db.CreateQuestline(&toCreate)
 	if err != nil {
@@ -61,6 +65,7 @@ func CreateQuestlineHandler(w http.ResponseWriter, r *http.Request) {
 // GetQuestlineHandler handles GET /api/questlines/{id}
 func GetQuestlineHandler(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
+
 	ql, err := db.GetQuestline(id)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -80,10 +85,13 @@ func UpdateQuestlineHandler(w http.ResponseWriter, r *http.Request) {
 
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&toUpdate); err != nil {
+		log.Printf("Bad payload: %s", r.Body)
 		respondError(w, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
 	defer r.Body.Close()
+
+	log.Printf("Updating questline %s to\n%v", toUpdate.Id, toUpdate)
 
 	if toUpdate.Id != id {
 		respondError(w, http.StatusBadRequest, "ID mismatch between URL param and body")
@@ -104,8 +112,10 @@ func UpdateQuestlineHandler(w http.ResponseWriter, r *http.Request) {
 
 // DeleteQuestlineHandler handles DELETE /api/questlines/{id}
 func DeleteQuestlineHandler(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "id")
-	err := db.DeleteQuestline(id)
+	toDelete := chi.URLParam(r, "id")
+	log.Printf("Deleting questline %s", toDelete)
+
+	err := db.DeleteQuestline(toDelete)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -115,13 +125,14 @@ func DeleteQuestlineHandler(w http.ResponseWriter, r *http.Request) {
 
 // ExportQuestlineHandler handles GET /api/questlines/{id}/export
 func ExportQuestlineHandler(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "id")
+	toExportId := chi.URLParam(r, "id")
+
 	fmt := r.URL.Query().Get("fmt")
 	if fmt == "" {
 		fmt = "json" // default
 	}
 
-	toExport, err := db.GetQuestline(id)
+	toExport, err := db.GetQuestline(toExportId)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			respondError(w, http.StatusNotFound, "Questline not found")
@@ -134,6 +145,8 @@ func ExportQuestlineHandler(w http.ResponseWriter, r *http.Request) {
 	var data []byte
 	contentType := ""
 	fileName := toExport.Name + "." + fmt
+
+	log.Printf("Exporting questline %s to %s", toExportId, fileName)
 
 	switch fmt {
 	case "json":
