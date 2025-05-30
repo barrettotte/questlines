@@ -10,7 +10,7 @@
   import type { ExposedQuestBoard } from './types';
 
   const store = useQuestStore();
-  const { error, isLoading, isDarkMode } = storeToRefs(store);
+  const { errorMsg, successMsg, isLoading, isDarkMode } = storeToRefs(store);
 
   const questBoardRef = ref<ExposedQuestBoard | null>(null);
 
@@ -33,8 +33,11 @@
     <div v-if="isLoading" class="global-message loading-indicator">
       Loading...
     </div>
-    <div v-if="error" class="global-message error-indicator">
-      {{ error }}
+    <div v-if="errorMsg" class="global-message error-indicator">
+      {{ errorMsg }}
+    </div>
+    <div v-if="successMsg" class="global-message success-indicator">
+      {{ successMsg }}
     </div>
   </div>
 </template>

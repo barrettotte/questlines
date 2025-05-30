@@ -546,12 +546,34 @@ html .dark .vue-flow__minimap-mask {
 .global-message {
   position: fixed;
   bottom: 20px;
-  padding: 10px 20px;
-  border-radius: 5px;
+  padding: 12px 20px;
+  border-radius: 6px;
   color: #fff;
   font-size: 14px;
+  font-weight: 500;
   z-index: 2000;
-  opacity: 0.9;
+  opacity: 0;
+  transform: translateY(20px);
+  animation: slideAndFadeIn 0.3s ease-out forwards, slideAndFadeOut 0.3s ease-in 2.7s forwards;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+@keyframes slideAndFadeIn {
+  to {
+    opacity: 0.95;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideAndFadeOut {
+  from {
+    opacity: 0.95;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(20px);
+  }
 }
 
 .loading-indicator {
@@ -562,6 +584,11 @@ html .dark .vue-flow__minimap-mask {
 .error-indicator {
   right: 20px;
   background-color: var(--danger-color);
+}
+
+.success-indicator {
+  right: 20px;
+  background-color: var(--success-color);
 }
 
 /******** Color picker ********/

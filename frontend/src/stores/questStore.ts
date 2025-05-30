@@ -7,6 +7,10 @@ import { apiService } from '../services/api';
 import type { Questline, Quest, Dependency, QuestlineInfo, Position as QuestPosition } from '../types';
 
 export const useQuestStore = defineStore('quest', () => {
+
+  // constants
+  const errorMsgWaitMs = 3000;
+  const successMsgWaitMs = 5000;
   
   // state
   const allQuestlines = ref<QuestlineInfo[]>([]);
@@ -20,7 +24,8 @@ export const useQuestStore = defineStore('quest', () => {
   const showQuestEditor = ref(false);
   const showLoadModal = ref(false);
 
-  const error = ref<string | null>(null);
+  const errorMsg = ref<string | null>(null);
+  const successMsg = ref<string | null>(null);
 
   const currQuestline = ref<Questline>({
     id: null,
@@ -71,11 +76,23 @@ export const useQuestStore = defineStore('quest', () => {
   });
 
   // handlers
-  function handleError(e: unknown, msg: string) {
+  function handleError(e: unknown, msg: string, duration: number = successMsgWaitMs) {
     console.error(msg, e);
     const errMsg = e instanceof Error ? e.message : String(e);
-    error.value = `${msg}: ${errMsg}`;
-    setTimeout(() => (error.value = null), 5000);
+    errorMsg.value = `${msg}: ${errMsg}`;
+    successMsg.value = null;
+    setTimeout(() => (errorMsg.value = null), duration);
+  }
+
+  function handleSuccess(msg: string, duration: number = errorMsgWaitMs) {
+    successMsg.value = msg;
+    errorMsg.value = null;
+    setTimeout(() => (successMsg.value = null), duration);
+  }
+
+  function resetMessages() {
+    errorMsg.value = null;
+    successMsg.value = null;
   }
 
   function getEdgeId(dep: Dependency, idx: number): string {
@@ -84,7 +101,7 @@ export const useQuestStore = defineStore('quest', () => {
 
   async function fetchAllQuestlines() {
     isLoading.value = true;
-    error.value = null;
+    resetMessages();
 
     try {
       allQuestlines.value = (await apiService.getQuestlines()) || [];
@@ -106,7 +123,7 @@ export const useQuestStore = defineStore('quest', () => {
       };
     } else {
       isLoading.value = true;
-      error.value = null;
+      errorMsg.value = null;
 
       try {
         currQuestline.value = await apiService.getQuestline(id);
@@ -123,12 +140,12 @@ export const useQuestStore = defineStore('quest', () => {
 
   async function saveCurrentQuestline() {
     if (!currQuestline.value.name.trim()) {
-      error.value = 'Questline name cannot be empty';
-      setTimeout(() => error.value = null, 3000);
+      errorMsg.value = 'Questline name cannot be empty';
+      setTimeout(() => errorMsg.value = null, errorMsgWaitMs);
       return;
     }
     isLoading.value = true;
-    error.value = null;
+    resetMessages();
 
     try {
       let saved: Questline;
@@ -146,6 +163,7 @@ export const useQuestStore = defineStore('quest', () => {
       }
       currQuestline.value = saved;
       await fetchAllQuestlines();
+      handleSuccess('Questline saved.');
     } catch (e) {
       handleError(e, 'Failed to save questline');
     } finally {
@@ -156,15 +174,16 @@ export const useQuestStore = defineStore('quest', () => {
   async function deleteCurrentQuestline() {
     const id = currQuestline.value.id;
     if (!id || !(allQuestlines.value as Questline[]).some((q: Questline) => q.id === id)) {
-      error.value = 'Please save before deleting, or select a saved questline';
-      setTimeout(() => error.value = null, 3000);
+      errorMsg.value = 'Please save before deleting, or select a saved questline';
+      successMsg.value = null;
+      setTimeout(() => errorMsg.value = null, errorMsgWaitMs);
       return;
     }
     if (!confirm('Are you sure?')) {
       return;
     }
     isLoading.value = true;
-    error.value = null;
+    resetMessages();
 
     try {
       await apiService.deleteQuestline(id);
@@ -208,8 +227,8 @@ export const useQuestStore = defineStore('quest', () => {
       dep.from === conn.source && dep.to === conn.target
     });
     if (exists || conn.source === conn.target) {
-      error.value = 'Cannot create duplicate or self-referencing link.';
-      setTimeout(() => error.value = null, 3000);
+      errorMsg.value = 'Cannot create duplicate or self-referencing link.';
+      setTimeout(() => errorMsg.value = null, errorMsgWaitMs);
       return;
     }
 
@@ -270,8 +289,8 @@ export const useQuestStore = defineStore('quest', () => {
 
   function triggerExport(fmt: string) {
     if (!currQuestline.value.id || !(allQuestlines.value as Questline[]).some((q: Questline) => q.id === currQuestline.value.id)) {
-      error.value = 'Please save questline before exporting';
-      setTimeout(() => error.value = null, 3000);
+      errorMsg.value = 'Please save questline before exporting';
+      setTimeout(() => errorMsg.value = null, errorMsgWaitMs);
       return;
     }
     apiService.exportQuestline(currQuestline.value.id, fmt);
@@ -303,7 +322,7 @@ export const useQuestStore = defineStore('quest', () => {
 
   return {
     // properties
-    currQuestline, allQuestlines, isLoading, error, nodes, edges, selectedQuestForEdit, 
+    currQuestline, allQuestlines, isLoading, errorMsg, successMsg, nodes, edges, selectedQuestForEdit, 
     showQuestEditor, showLoadModal, isDarkMode, hoveredNodeId, hoveredEdgeId,
     // functions
     fetchAllQuestlines, loadQuestline, saveCurrentQuestline, deleteCurrentQuestline,
