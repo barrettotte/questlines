@@ -223,9 +223,12 @@ export const useQuestStore = defineStore('quest', () => {
     }
   }
 
-  function removeQuestDependency(edgeId: string) {
-    currQuestline.value.dependencies = currQuestline.value.dependencies.filter((dep: Dependency, idx: number) => {
-      return getEdgeId(dep, idx) !== edgeId
+  function removeQuestDependencies(edgeIds: string[]) {
+    if (edgeIds.length === 0) {
+      return;
+    }
+    currQuestline.value.dependencies = currQuestline.value.dependencies.filter((dep: Dependency, index: number) => {
+      return !edgeIds.includes(getEdgeId(dep, index));
     });
   }
 
@@ -287,7 +290,7 @@ export const useQuestStore = defineStore('quest', () => {
     // functions
     fetchAllQuestlines, loadQuestline, saveCurrentQuestline, deleteCurrentQuestline,
     addQuestNode, updateQuestPosition, addQuestDependency, removeQuestNode,
-    removeQuestDependency, openQuestForEdit, closeQuestEditor, updateQuestDetails,
+    removeQuestDependencies, openQuestForEdit, closeQuestEditor, updateQuestDetails,
     toggleLoadModal, triggerExport, toggleDarkMode,
   };
 });

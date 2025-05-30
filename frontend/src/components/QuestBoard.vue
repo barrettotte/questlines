@@ -35,13 +35,16 @@
   });
 
   onEdgesChange((changes: EdgeChange[]) => {
+    const idsToRemove: string[] = [];
+
     changes.forEach((change: EdgeChange) => {
       if (change.type === 'remove') {
-        store.removeQuestDependency(change.id);
+        idsToRemove.push(change.id);
       }
     });
-  });
 
+    store.removeQuestDependencies(idsToRemove);
+  });
 
   function addNewQuestAtViewportCenter() {
     let newQuestPosition = { x: 100, y: 100 }; // fallback
