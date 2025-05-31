@@ -6,6 +6,8 @@
   import QuestBoard from './components/QuestBoard.vue';
   import QuestEditor from './components/QuestEditor.vue';
   import LoadModal from './components/LoadModal.vue';
+  import HelpModal from './components/HelpModal.vue';
+
   import { useQuestStore } from './stores/questStore';
   import type { ExposedQuestBoard } from './types';
 
@@ -29,6 +31,7 @@
     </main>
     <QuestEditor/>
     <LoadModal/>
+    <HelpModal/>
 
     <div v-if="isLoading" class="global-message loading-indicator">
       Loading...

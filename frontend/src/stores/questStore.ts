@@ -23,6 +23,7 @@ export const useQuestStore = defineStore('quest', () => {
   const isDarkMode = ref(false);
   const showQuestEditor = ref(false);
   const showLoadModal = ref(false);
+  const showHelpModal = ref(false);
 
   const errorMsg = ref<string | null>(null);
   const successMsg = ref<string | null>(null);
@@ -287,6 +288,14 @@ export const useQuestStore = defineStore('quest', () => {
     }
   }
 
+  function openHelpModal() {
+    showHelpModal.value = true;
+  }
+
+  function closeHelpModal() {
+    showHelpModal.value = false;
+  }
+
   function triggerExport(fmt: string) {
     if (!currQuestline.value.id || !(allQuestlines.value as Questline[]).some((q: Questline) => q.id === currQuestline.value.id)) {
       errorMsg.value = 'Please save questline before exporting';
@@ -323,11 +332,12 @@ export const useQuestStore = defineStore('quest', () => {
   return {
     // properties
     currQuestline, allQuestlines, isLoading, errorMsg, successMsg, nodes, edges, selectedQuestForEdit, 
-    showQuestEditor, showLoadModal, isDarkMode, hoveredNodeId, hoveredEdgeId,
+    showQuestEditor, showLoadModal, showHelpModal, isDarkMode, hoveredNodeId, hoveredEdgeId,
     // functions
     fetchAllQuestlines, loadQuestline, saveCurrentQuestline, deleteCurrentQuestline,
     addQuestNode, updateQuestPosition, addQuestDependency, removeQuestNode,
     removeQuestDependencies, openQuestForEdit, closeQuestEditor, updateQuestDetails,
-    toggleLoadModal, triggerExport, toggleDarkMode, setHoveredNodeId, setHoveredEdgeId,
+    toggleLoadModal, openHelpModal, closeHelpModal, triggerExport, toggleDarkMode, 
+    setHoveredNodeId, setHoveredEdgeId,
   };
 });

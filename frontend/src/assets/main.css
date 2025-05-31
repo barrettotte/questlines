@@ -224,48 +224,6 @@ main {
   margin: 0 10px;
 }
 
-.dark .toolbar-export-menu .dropdown-content {
-  background-color: #444;
-}
-.dark .toolbar-export-menu .dropdown-content a {
-  color: white;
-}
-.dark .toolbar-export-menu .dropdown-content a:hover {
-  background-color: #555;
-}
-
-.toolbar-export-menu {
-  position: relative;
-  display: inline-block;
-}
-.toolbar-export-menu .dropdown-content {
-  display: none;
-  position: absolute;
-  background-color: #444;
-  min-width: 120px;
-  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-  z-index: 1;
-  border-radius: 4px;
-  padding: 5px 0;
-  top: 100%;
-  left: 0;
-}
-.toolbar-export-menu:hover .dropdown-content {
-  display: block;
-}
-.toolbar-export-menu .dropdown-content a {
-  color: white;
-  padding: 8px 12px;
-  text-decoration: none;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-}
-.toolbar-export-menu .dropdown-content a:hover {
-  background-color: #555;
-}
-
 /******** Modal ********/
 
 .modal-overlay {
