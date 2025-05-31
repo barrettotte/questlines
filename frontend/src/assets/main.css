@@ -259,7 +259,7 @@ main {
   justify-content: space-between;
   align-items: center;
 }
-.dark .modal-header .close-btn {
+html.dark .modal-header .close-btn {
   color: #aaa;
 }
 .modal-header .close-btn {
@@ -287,13 +287,13 @@ main {
   gap: 10px;
 }
 
-.dark .modal-list {
+html.dark .modal-list {
   border-color: #444;
 }
-.dark .modal-list li {
+html.dark .modal-list li {
   border-bottom-color: #444;
 }
-.dark .modal-list li:hover {
+html.dark .modal-list li:hover {
   background-color: #3b475c;
 }
 .modal-list {
@@ -337,12 +337,35 @@ main {
 .quest-node:hover {
   transform: scale(1.03);
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  border-color: var(--vue-flow-selected);
+}
+html.dark .quest-node {
+  background-color: var(--node-bg);
+  color: var(--node-text);
+  border-color: var(--node-border);
+}
+html.dark .quest-node:hover {
+  box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+}
+
+.vue-flow__node-custom.selected .quest-node {
+  box-shadow: 0 0 0 2px var(--bg-color),
+              0 0 0 4px var(--vue-flow-selected),
+              0 6px 18px rgba(0,0,0,0.2);
+  transform: scale(1.02);
+}
+html.dark .vue-flow__node-custom.selected .quest-node {
+  border-color: var(--info-color) !important;
+  box-shadow: 0 0 0 2px var(--bg-color),
+              0 0 0 4px var(--vue-flow-selected),
+              0 6px 20px rgba(0,0,0,0.5);
 }
 
 .quest-node-header {
   font-weight: bold;
   margin-bottom: 5px;
+  color: var(--node-text);
+}
+html.dark .quest-node-header {
   color: var(--node-text);
 }
 
@@ -356,23 +379,26 @@ main {
   text-align: left;
   color: var(--node-desc-text);
 }
+html.dark .quest-node-description {
+  color: var(--node-desc-text);
+}
 
-.dark .quest-node-actions button {
+html.dark .quest-node-actions button {
   color: #bbb;
 }
-.dark .quest-node-actions button:hover {
+html.dark .quest-node-actions button:hover {
   color: #fff;
 }
-.dark .quest-node-actions .delete-btn:hover {
+html.dark .quest-node-actions .delete-btn:hover {
   color: var(--danger-color);
 }
-.dark .quest-node-actions .edit-btn:hover {
+html.dark .quest-node-actions .edit-btn:hover {
   color: var(--primary-color);
 }
 
 .quest-node-actions {
   display: flex;
-  justify-content: flex-end; /* align right */
+  justify-content: flex-end;
   margin-top: 8px;
   gap: 5px;
 }
@@ -388,30 +414,19 @@ main {
 .quest-node-actions button:hover {
   color: #000;
 }
+html.dark .quest-node-actions button {
+  color: #bbb;
+}
+html.dark .quest-node-actions button:hover {
+  color: #fff;
+}
+
 .quest-node-actions .delete-btn:hover {
   color: var(--danger-color);
 }
+
 .quest-node-actions .edit-btn:hover {
   color: var(--primary-color);
-}
-
-html .dark .quest-node {
-  background-color: var(--node-bg);
-  color: var(--node-text);
-  border-color: var(--node-border);
-}
-html .dark .quest-node-header {
-  color: var(--node-text);
-}
-html .dark .quest-node-description {
-  color: var(--node-desc-text);
-}
-
-html .dark .quest-node-actions button {
-  color: #bbb;
-}
-html .dark .quest-node-actions button:hover {
-  color: #fff;
 }
 
 /******** VueFlow ********/
@@ -425,29 +440,29 @@ html .dark .quest-node-actions button:hover {
   outline: none;
 }
 
-html .dark .vue-flow__minimap {
+html.dark .vue-flow__minimap {
   border: 1px solid #4a5568;
   background-color: rgba(40, 50, 70, 0.9);
   box-shadow: 0 0 8px rgba(0, 0, 0, 0.6);
   outline: none;
 }
 
-html .dark .vue-flow__minimap-mask {
+html.dark .vue-flow__minimap-mask {
   fill: rgba(40, 50, 70, 0.9);
 }
 
-.dark .vue-flow__edge-text {
+html.dark .vue-flow__edge-text {
   fill: var(--text-color);
 }
-.dark .vue-flow__controls {
+html.dark .vue-flow__controls {
   box-shadow: 0 0 10px rgba(0,0,0,0.4);
 }
-.dark .vue-flow__controls-button {
+html.dark .vue-flow__controls-button {
   background: #4a5568;
   color: #e2e8f0;
   border-bottom: 1px solid #2d3748;
 }
-.dark .vue-flow__controls-button:hover {
+html.dark .vue-flow__controls-button:hover {
   background: #718096;
 }
 
@@ -462,11 +477,11 @@ html .dark .vue-flow__minimap-mask {
   border-color: var(--primary-color);
 }
 
-.dark .vue-flow__handle {
+html.dark .vue-flow__handle {
   border: 1px solid #aaa;
   background-color: #333;
 }
-.dark .vue-flow__handle:hover {
+html.dark .vue-flow__handle:hover {
   background-color: var(--primary-color);
   border-color: var(--primary-color);
 }
@@ -569,7 +584,7 @@ html .dark .vue-flow__minimap-mask {
 .color-swatch.selected {
   border-color: #333;
 }
-.dark .color-swatch.selected {
+html.dark .color-swatch.selected {
   border-color: #fff;
 }
 
