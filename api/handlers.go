@@ -27,6 +27,7 @@ func respondJSON(w http.ResponseWriter, status int, payload interface{}) {
 
 // helper for sending error responses
 func respondError(w http.ResponseWriter, code int, msg string) {
+	log.Printf("error: %s", msg)
 	respondJSON(w, code, map[string]string{"error": msg})
 }
 

@@ -14,19 +14,35 @@ func (p Position) String() string {
 	return fmt.Sprintf("Position{X: %f, Y: %f}", p.X, p.Y)
 }
 
+type Objective struct {
+	Id        string `json:"id"`
+	QuestId   string `json:"-"` // internal
+	Text      string `json:"text"`
+	Completed bool   `json:"completed"`
+	SortIndex int    `json:"sortIndex"`
+}
+
+func (o Objective) String() string {
+	return fmt.Sprintf(
+		"Objective{Id: %v, QuestId: %v, Text: %v, Completed: %v, SortIndex: %d}",
+		o.Id, o.QuestId, o.Text, o.Completed, o.SortIndex,
+	)
+}
+
 type Quest struct {
-	Id          string   `json:"id"`
-	QuestlineId string   `json:"-"` // internal
-	Title       string   `json:"title"`
-	Description string   `json:"description"`
-	Position    Position `json:"position"`
-	Color       string   `json:"color,omitempty"`
+	Id          string      `json:"id"`
+	QuestlineId string      `json:"-"` // internal
+	Title       string      `json:"title"`
+	Description string      `json:"description"`
+	Position    Position    `json:"position"`
+	Color       string      `json:"color,omitempty"`
+	Objectives  []Objective `json:"objectives,omitempty"`
 }
 
 func (q Quest) String() string {
 	return fmt.Sprintf(
-		"Quest{Id: %q, QuestlineId: %v, Title: %v, Description: %v, Position: %v, Color: %v}",
-		q.Id, q.QuestlineId, q.Title, q.Description, q.Position, q.Color,
+		"Quest{Id: %q, QuestlineId: %v, Title: %v, Description: %v, Position: %v, Color: %v, Objectives: %v}",
+		q.Id, q.QuestlineId, q.Title, q.Description, q.Position, q.Color, q.Objectives,
 	)
 }
 
@@ -45,8 +61,8 @@ type Questline struct {
 	Name         string       `json:"name"`
 	Quests       []Quest      `json:"quests"`
 	Dependencies []Dependency `json:"dependencies"`
-	Created      time.Time    `json:"created,omitempty"`
-	Updated      time.Time    `json:"updated,omitempty"`
+	Created      time.Time    `json:"created"`
+	Updated      time.Time    `json:"updated"`
 }
 
 func (ql Questline) String() string {

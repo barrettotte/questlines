@@ -4,7 +4,7 @@ import { type Connection, type Node, type Edge, MarkerType } from '@vue-flow/cor
 import { v4 as uuidv4 } from 'uuid';
 
 import { apiService } from '../services/api';
-import type { Questline, Quest, Dependency, QuestlineInfo, Position as QuestPosition } from '../types';
+import type { Questline, Quest, Dependency, QuestlineInfo, Position as QuestPosition, Objective } from '../types';
 
 export const useQuestStore = defineStore('quest', () => {
 
@@ -207,6 +207,7 @@ export const useQuestStore = defineStore('quest', () => {
       description: '',
       position: finalPos,
       color: '#cccccc',
+      objectives: [],
     };
     currQuestline.value.quests.push(newQuest);
   }
@@ -238,6 +239,44 @@ export const useQuestStore = defineStore('quest', () => {
       to: conn.target,
     };
     currQuestline.value.dependencies.push(newDep);
+  }
+
+  function addObjective(questId: string, text?: string) {
+    const quest = currQuestline.value.quests.find(q => q.id === questId);
+    if (quest) {
+      if (!quest.objectives) {
+        quest.objectives = [];
+      }
+      quest.objectives.push({
+        id: uuidv4(),
+        text: text || 'New objective',
+        completed: false,
+      });
+    }
+  }
+
+  function removeObjective(questId: string, objectiveId: string) {
+    const quest = currQuestline.value.quests.find(q => q.id === questId);
+    if (quest && quest.objectives) {
+      quest.objectives = quest.objectives.filter(o => o.id !== objectiveId);
+    }
+  }
+
+  function updateObjective(questId: string, updated: Objective) {
+    const quest = currQuestline.value.quests.find(q => q.id === questId);
+
+    if (quest && quest.objectives) {
+      const existingObjective = quest.objectives.find(o => o.id === updated.id);
+
+      if (existingObjective) {
+        if (updated.text !== undefined && updated.text !== null) {
+          existingObjective.text = updated.text;
+        }
+        if (updated.completed !== undefined && updated.completed !== null) {
+          existingObjective.completed = updated.completed;
+        }
+      }
+    }
   }
 
   function removeQuestNodes(nodeIds: string[]) {
@@ -354,6 +393,7 @@ export const useQuestStore = defineStore('quest', () => {
     fetchAllQuestlines, loadQuestline, saveCurrentQuestline, deleteCurrentQuestline,
     addQuestNode, updateQuestPosition, addQuestDependency, 
     removeQuestNodes, removeQuestDependencies,
+    addObjective, removeObjective, updateObjective,
     openQuestForEdit, openLoadModal, openHelpModal, isAnyModalOpen,
     closeQuestEditor, closeLoadModal, closeHelpModal, closeAllModals,
     updateQuestDetails, triggerExport, toggleDarkMode, 

@@ -33,8 +33,7 @@ func InitDB(dataSourceName string, migrationsDir string, embeddedMigrations embe
 	// enable foreign keys
 	_, err = DB.Exec("PRAGMA foreign_keys = ON;")
 	if err != nil {
-		log.Printf("Failed to enable foreign keys: %v", err)
-		return err
+		return fmt.Errorf("failed to enable foreign keys: %w", err)
 	}
 
 	applyMigrations(migrationsDir, embeddedMigrations)
@@ -80,7 +79,7 @@ func applyMigrations(migrationsDir string, embeddedMigrations embed.FS) {
 func GetQuestlineInfos() ([]models.QuestlineInfo, error) {
 	rows, err := DB.Query("SELECT id, name, updated FROM questlines ORDER BY updated DESC")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to query questlines: %w", err)
 	}
 	defer rows.Close()
 
@@ -89,7 +88,7 @@ func GetQuestlineInfos() ([]models.QuestlineInfo, error) {
 		var info models.QuestlineInfo
 
 		if err := rows.Scan(&info.Id, &info.Name, &info.Updated); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to scan questline: %w", err)
 		}
 		infos = append(infos, info)
 	}
@@ -105,13 +104,13 @@ func GetQuestline(id string) (*models.Questline, error) {
 		&questline.Id, &questline.Name, &questline.Created, &questline.Updated,
 	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to query questline %s: %w", id, err)
 	}
 
 	// fetch quests of questline
 	questRows, err := DB.Query("SELECT id, title, description, pos_x, pos_y, color FROM quests WHERE questline_id=?", id)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to query quests for questline %s: %w", id, err)
 	}
 	defer questRows.Close()
 
@@ -119,15 +118,32 @@ func GetQuestline(id string) (*models.Questline, error) {
 	for questRows.Next() {
 		var quest models.Quest
 		if err := questRows.Scan(&quest.Id, &quest.Title, &quest.Description, &quest.Position.X, &quest.Position.Y, &quest.Color); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to scan quest for questline %s: %w", id, err)
 		}
+
+		// fetch objectives for quest
+		objectiveRows, err := DB.Query("SELECT id, text, completed, sort_index FROM objectives WHERE quest_id=? ORDER BY sort_index", quest.Id)
+		if err != nil {
+			return nil, fmt.Errorf("failed to query objectives for quest %s: %w", quest.Id, err)
+		}
+		defer objectiveRows.Close()
+
+		quest.Objectives = make([]models.Objective, 0)
+		for objectiveRows.Next() {
+			var o models.Objective
+			if err := objectiveRows.Scan(&o.Id, &o.Text, &o.Completed, &o.SortIndex); err != nil {
+				return nil, fmt.Errorf("failed to scan objective for quest %s: %w", o.Id, err)
+			}
+			quest.Objectives = append(quest.Objectives, o)
+		}
+
 		questline.Quests = append(questline.Quests, quest)
 	}
 
 	// fetch dependencies in questline
 	depRows, err := DB.Query("SELECT from_id, to_id FROM dependencies WHERE questline_id=?", id)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to query dependencies for questline %s: %w", id, err)
 	}
 	defer depRows.Close()
 
@@ -135,7 +151,7 @@ func GetQuestline(id string) (*models.Questline, error) {
 	for depRows.Next() {
 		var d models.Dependency
 		if err := depRows.Scan(&d.From, &d.To); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to scan dependency for questline %s: %w", id, err)
 		}
 		questline.Dependencies = append(questline.Dependencies, d)
 	}
@@ -150,87 +166,114 @@ func saveQuestline(tx *sql.Tx, questline *models.Questline, isUpdate bool) error
 	if isUpdate {
 		_, err := tx.Exec("UPDATE questlines SET name=?, updated=? WHERE id=?", questline.Name, now, questline.Id)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to update questline %s: %w", questline.Id, err)
 		}
 
-		// clear old quests and dependencies
+		// clear old quests (dependencies and objectives cascade deleted)
 		_, err = tx.Exec("DELETE FROM quests WHERE questline_id=?", questline.Id)
 		if err != nil {
-			return err
-		}
-		_, err = tx.Exec("DELETE FROM dependencies WHERE questline_id=?", questline.Id)
-		if err != nil {
-			return err
+			return fmt.Errorf("failed to delete old quests for questline %s: %w", questline.Id, err)
 		}
 	} else {
+		if questline.Id == "" || questline.Id == "null" {
+			questline.Id = uuid.New().String()
+		}
 		_, err := tx.Exec("INSERT INTO questlines (id, name, created, updated) VALUES (?,?,?,?)", questline.Id, questline.Name, now, now)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to insert quest_line %s: %w", questline.Id, err)
 		}
 	}
 
 	// insert quests
 	questStmt, err := tx.Prepare("INSERT INTO quests (id, questline_id, title, description, pos_x, pos_y, color) VALUES (?,?,?,?,?,?,?)")
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to prepare quest insert statement: %w", err)
 	}
 	defer questStmt.Close()
 
+	objectiveStmt, err := tx.Prepare("INSERT INTO objectives (id, quest_id, text, completed, sort_index) VALUES (?,?,?,?,?)")
+	if err != nil {
+		return fmt.Errorf("failed to prepare objective insert statement: %w", err)
+	}
+	defer objectiveStmt.Close()
+
 	for _, q := range questline.Quests {
+		if q.Id == "" {
+			return fmt.Errorf("quest found with empty ID for quest_line %s", questline.Id)
+		}
+
 		_, err := questStmt.Exec(q.Id, questline.Id, q.Title, q.Description, q.Position.X, q.Position.Y, q.Color)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to insert quest %s for quest_line %s: %w", q.Id, questline.Id, err)
+		}
+
+		if len(q.Objectives) > 0 {
+			for _, o := range q.Objectives {
+				if o.Id == "" {
+					return fmt.Errorf("objective found with empty ID for quest %s", q.Id)
+				}
+				_, err := objectiveStmt.Exec(o.Id, q.Id, o.Text, o.Completed, o.SortIndex)
+				if err != nil {
+					return fmt.Errorf("failed to insert checklist item %s for quest %s: %w", o.Id, q.Id, err)
+				}
+			}
 		}
 	}
 
 	// insert dependencies
-	depStmt, err := tx.Prepare("INSERT INTO dependencies (questline_id, from_id, to_id) VALUES (?,?,?)")
-	if err != nil {
-		return err
-	}
-	defer depStmt.Close()
-
-	for _, d := range questline.Dependencies {
-		_, err := depStmt.Exec(questline.Id, d.From, d.To)
+	if len(questline.Dependencies) > 0 {
+		depStmt, err := tx.Prepare("INSERT INTO dependencies (questline_id, from_id, to_id) VALUES (?,?,?)")
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to prepare dependency insert statement: %w", err)
+		}
+		defer depStmt.Close()
+
+		for _, d := range questline.Dependencies {
+			_, err := depStmt.Exec(questline.Id, d.From, d.To)
+			if err != nil {
+				return fmt.Errorf("failed to insert dependency for quest_line %s (from %s to %s): %w", questline.Id, d.From, d.To, err)
+			}
 		}
 	}
+
 	return nil
 }
 
 // CreateQuestline creates new questline
-func CreateQuestline(ql *models.Questline) (*models.Questline, error) {
-	ql.Id = uuid.New().String()
+func CreateQuestline(questline *models.Questline) (*models.Questline, error) {
+	questline.Id = uuid.New().String()
 
 	tx, err := DB.Begin()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to begin create questline transaction %s: %w", questline.Id, err)
 	}
-	if err := saveQuestline(tx, ql, false); err != nil {
+	if err := saveQuestline(tx, questline, false); err != nil {
 		tx.Rollback()
-		return nil, err
+		return nil, fmt.Errorf("failed to save questline %s: %w", questline.Id, err)
 	}
 	tx.Commit()
-	return GetQuestline(ql.Id)
+	return GetQuestline(questline.Id)
 }
 
 // UpdateQuestline updates existing questline
-func UpdateQuestline(ql *models.Questline) (*models.Questline, error) {
+func UpdateQuestline(questline *models.Questline) (*models.Questline, error) {
 	tx, err := DB.Begin()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to begin update questline transaction %s: %w", questline.Id, err)
 	}
-	if err := saveQuestline(tx, ql, true); err != nil {
+	if err := saveQuestline(tx, questline, true); err != nil {
 		tx.Rollback()
-		return nil, err
+		return nil, fmt.Errorf("failed to save questline %s: %w", questline.Id, err)
 	}
 	tx.Commit()
-	return GetQuestline(ql.Id)
+	return GetQuestline(questline.Id)
 }
 
 // DeleteQuestline deletes questline
 func DeleteQuestline(id string) error {
 	_, err := DB.Exec("DELETE FROM questlines WHERE id=?", id)
-	return err
+	if err != nil {
+		return fmt.Errorf("failed to delete questline %s: %w", id, err)
+	}
+	return nil
 }

@@ -34,11 +34,11 @@ func main() {
 	}
 	defer db.DB.Close()
 
-	r := chi.NewRouter()
-
 	// setup middleware
+	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
+
 	allowedOrigins := []string{"http://localhost:" + port}
 
 	// add vue dev port when in development mode

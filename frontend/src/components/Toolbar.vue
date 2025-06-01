@@ -75,7 +75,47 @@
 </template>
 
 <style scoped>
-  .toolbar-input {
-    margin-right: 10px;
+  .toolbar {
+    background-color: var(--toolbar-bg);
+    color: var(--toolbar-text);
+    padding: 10px 15px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    z-index: 100;
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
+
+  .toolbar-title {
+    font-size: 1.2em;
+    font-weight: bold;
+    margin-right: 20px;
+    white-space: nowrap;
+  }
+
+  .toolbar-input {
+    padding: 8px 12px;
+    border: 1px solid var(--toolbar-input-border);;
+    border-radius: 4px;
+    background-color: var(--toolbar-input-bg);
+    color: var(--toolbar-text);
+    flex-grow: 1;
+    min-width: 200px;
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  }
+
+  .toolbar-group {
+    display: flex;
+    align-items: center;
+  }
+
+  .toolbar-divider {
+    width: 1px;
+    height: 25px;
+    background-color: #555;
+    margin: 0 10px;
+  }
+
 </style>

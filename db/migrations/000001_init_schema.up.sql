@@ -28,6 +28,15 @@ CREATE TABLE IF NOT EXISTS dependencies (
     FOREIGN KEY (to_id) REFERENCES quests(id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS objectives (
+    id TEXT PRIMARY KEY,
+    quest_id TEXT NOT NULL,
+    text TEXT NOT NULL,
+    completed BOOLEAN DEFAULT FALSE,
+    sort_index INTEGER DEFAULT 0,
+    FOREIGN KEY (quest_id) REFERENCES quests(id) ON DELETE CASCADE
+);
+
 CREATE TRIGGER IF NOT EXISTS update_questline_modtime
 AFTER UPDATE ON questlines
 FOR EACH ROW
