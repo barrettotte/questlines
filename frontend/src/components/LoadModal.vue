@@ -9,17 +9,17 @@
 
   const selectAndLoad = (id: string) => {
     store.loadQuestline(id);
-    store.toggleLoadModal(false);
+    store.closeLoadModal();
   };
 
 </script>
 
 <template>
-  <div v-if="showLoadModal" class="modal-overlay" @click.self="store.toggleLoadModal(false)">
+  <div v-if="showLoadModal" class="modal-overlay" @click.self="store.closeLoadModal()">
     <div class="modal-content">
       <div class="modal-header">
         <span>Load Questline</span>
-        <button class="close-btn" @click="store.toggleLoadModal(false)">
+        <button class="close-btn" @click="store.closeLoadModal()">
           <X :size="20"/>
         </button>
       </div>
@@ -35,7 +35,7 @@
         </ul>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-secondary" @click="store.toggleLoadModal(false)">Close</button>
+        <button class="btn btn-primary" @click="store.closeLoadModal()">Close</button>
       </div>
     </div>
   </div>

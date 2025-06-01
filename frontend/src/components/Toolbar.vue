@@ -34,7 +34,7 @@
         <Plus :size="16" class="btn-icon"/> New
       </button>
 
-      <button class="btn btn-secondary" @click="store.toggleLoadModal(true)" title="Load Questline">
+      <button class="btn btn-secondary" @click="store.openLoadModal" title="Load Questline">
         <UploadCloud :size="16" class="btn-icon"/> Load
       </button>
 

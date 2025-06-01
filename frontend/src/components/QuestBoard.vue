@@ -13,7 +13,7 @@
   import CustomNode from './CustomNode.vue';
 
   const store = useQuestStore();
-  const { nodes: storeNodes, edges: storeEdges, isDarkMode } = storeToRefs(store);
+  const { nodes: storeNodes, edges: storeEdges, isDarkMode, } = storeToRefs(store);
   const {
     dimensions, viewport, getSelectedNodes, getSelectedEdges,
     onNodeDragStop, onConnect, project, setNodes,
@@ -23,7 +23,6 @@
   const nodeTypes = { custom: CustomNode, };
 
   defineExpose({ addNewQuestAtViewportCenter });
-
 
   onConnect((conn: Connection) => {
     store.addQuestDependency(conn);
@@ -40,8 +39,8 @@
     );
   });
 
-  const handleKeyDown = (event: KeyboardEvent) => {
-    if (event.key === 'Delete') {
+  const handleVueFlowKeyDown = (event: KeyboardEvent) => {
+    if (event.key === 'Delete' && !store.isAnyModalOpen()) {
       const selectedNodes = getSelectedNodes.value;
       const selectedEdges = getSelectedEdges.value;
 
@@ -78,7 +77,7 @@
 </script>
 
 <template>
-  <div class="quest-board-wrapper" @keydown="handleKeyDown" tabindex="0">
+  <div class="quest-board-wrapper" @keydown="handleVueFlowKeyDown" tabindex="0">
     <VueFlow
       :nodes="storeNodes"
       :edges="storeEdges"

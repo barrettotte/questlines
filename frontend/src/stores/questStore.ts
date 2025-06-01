@@ -283,11 +283,13 @@ export const useQuestStore = defineStore('quest', () => {
     closeQuestEditor();
   }
 
-  function toggleLoadModal(show: boolean) {
-    showLoadModal.value = show;
-    if (show) {
-      fetchAllQuestlines();
-    }
+  function openLoadModal() {
+    showLoadModal.value = true;
+    fetchAllQuestlines();
+  }
+
+  function closeLoadModal() {
+    showLoadModal.value = false;
   }
 
   function openHelpModal() {
@@ -296,6 +298,16 @@ export const useQuestStore = defineStore('quest', () => {
 
   function closeHelpModal() {
     showHelpModal.value = false;
+  }
+
+  function isAnyModalOpen(): boolean {
+    return showQuestEditor.value || showLoadModal.value || showHelpModal.value;
+  }
+
+  function closeAllModals() {
+    closeQuestEditor();
+    closeLoadModal();
+    closeHelpModal();
   }
 
   function triggerExport(fmt: string) {
@@ -333,13 +345,18 @@ export const useQuestStore = defineStore('quest', () => {
 
   return {
     // properties
-    currQuestline, allQuestlines, isLoading, errorMsg, successMsg, nodes, edges, selectedQuestForEdit, 
-    showQuestEditor, showLoadModal, showHelpModal, isDarkMode, hoveredNodeId, hoveredEdgeId,
+    currQuestline, allQuestlines, 
+    isLoading, errorMsg, successMsg, 
+    nodes, edges, selectedQuestForEdit, 
+    showQuestEditor, showLoadModal, showHelpModal, isDarkMode, 
+    hoveredNodeId, hoveredEdgeId,
     // functions
     fetchAllQuestlines, loadQuestline, saveCurrentQuestline, deleteCurrentQuestline,
-    addQuestNode, updateQuestPosition, addQuestDependency, removeQuestNodes, removeQuestDependencies,
-    openQuestForEdit, closeQuestEditor, updateQuestDetails,
-    toggleLoadModal, openHelpModal, closeHelpModal, triggerExport, toggleDarkMode, 
+    addQuestNode, updateQuestPosition, addQuestDependency, 
+    removeQuestNodes, removeQuestDependencies,
+    openQuestForEdit, openLoadModal, openHelpModal, isAnyModalOpen,
+    closeQuestEditor, closeLoadModal, closeHelpModal, closeAllModals,
+    updateQuestDetails, triggerExport, toggleDarkMode, 
     setHoveredNodeId, setHoveredEdgeId,
   };
 });

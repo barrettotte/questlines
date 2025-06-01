@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import { storeToRefs } from 'pinia';
-  import { onMounted, ref } from 'vue';
+  import { nextTick, onMounted, onUnmounted, ref } from 'vue';
 
   import Toolbar from './components/Toolbar.vue';
   import QuestBoard from './components/QuestBoard.vue';
@@ -19,7 +19,34 @@
   onMounted(() => {
     store.fetchAllQuestlines();
     store.loadQuestline(null);
+    window.addEventListener('keydown', handleWindowLevelShortcuts);
   });
+
+  onUnmounted(() => {
+    window.removeEventListener('keydown', handleWindowLevelShortcuts);
+  });
+
+  const handleWindowLevelShortcuts = (event: KeyboardEvent) => {
+    const k = event.key.toLowerCase();
+
+    // ctrl +
+    if (event.ctrlKey || event.metaKey) {
+      if (k === 's') {
+        event.preventDefault();
+        store.saveCurrentQuestline();
+      } else if (k === ' ') {
+        questBoardRef.value?.addNewQuestAtViewportCenter();
+      }
+    } else if (k === 'Escape') {
+      store.closeAllModals();
+
+      nextTick(() => {
+        if (document.activeElement && typeof (document.activeElement as HTMLElement).blur === 'function') {
+          (document.activeElement as HTMLElement).blur();
+        }
+      });
+    } 
+  };
 
 </script>
 

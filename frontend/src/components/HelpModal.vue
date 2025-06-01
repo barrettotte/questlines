@@ -23,9 +23,11 @@
         <div class="help-section">
           <h4><Keyboard :size="18" class="help-icon"/> Key Shortcuts</h4>
           <ul class="help-list">
-            <li><strong>Delete Key:</strong> Deletes selected quest(s) or edge(s).</li>
+            <li><strong>Delete:</strong> Deletes selected quest(s) or edge(s).</li>
             <li><strong>Shift + Drag:</strong> Box selection for multiple items.</li>
             <li><strong>Shift + Click:</strong> Add/remove individual item to/from selection.</li>
+            <li><strong>Ctrl + S:</strong> Save current questline.</li>
+            <li><strong>Ctrl + Spacebar:</strong> Add a new quest to current questline.</li>
           </ul>
         </div>
         <div class="help-section-divider"></div>

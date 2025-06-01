@@ -498,7 +498,7 @@ html.dark .vue-flow__handle:hover {
   stroke: var(--vue-flow-selected) !important;
 }
 
-.vue-flow__node-custom.selected .quest-node {
+.vue-flow__node-custom.selected:not(.dragging) .quest-node {
   box-shadow: 0 0 0 2px var(--bg-color),
               0 0 0 4px var(--vue-flow-selected),
               0 6px 18px rgba(0,0,0,0.2);
