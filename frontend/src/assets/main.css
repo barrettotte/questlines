@@ -343,22 +343,6 @@ html.dark .quest-node {
   color: var(--node-text);
   border-color: var(--node-border);
 }
-html.dark .quest-node:hover {
-  box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-}
-
-.vue-flow__node-custom.selected .quest-node {
-  box-shadow: 0 0 0 2px var(--bg-color),
-              0 0 0 4px var(--vue-flow-selected),
-              0 6px 18px rgba(0,0,0,0.2);
-  transform: scale(1.02);
-}
-html.dark .vue-flow__node-custom.selected .quest-node {
-  border-color: var(--info-color) !important;
-  box-shadow: 0 0 0 2px var(--bg-color),
-              0 0 0 4px var(--vue-flow-selected),
-              0 6px 20px rgba(0,0,0,0.5);
-}
 
 .quest-node-header {
   font-weight: bold;
@@ -512,6 +496,12 @@ html.dark .vue-flow__handle:hover {
 .vue-flow__edge-custom.selected .vue-flow__marker path {
   fill: var(--vue-flow-selected) !important;
   stroke: var(--vue-flow-selected) !important;
+}
+
+.vue-flow__node-custom.selected .quest-node {
+  box-shadow: 0 0 0 2px var(--bg-color),
+              0 0 0 4px var(--vue-flow-selected),
+              0 6px 18px rgba(0,0,0,0.2);
 }
 
 /******** Load and error messages ********/

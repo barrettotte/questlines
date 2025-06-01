@@ -240,16 +240,18 @@ export const useQuestStore = defineStore('quest', () => {
     currQuestline.value.dependencies.push(newDep);
   }
 
-  function removeQuestNode(questId: string) {
-    if (!confirm("Are you sure?")) {
+  function removeQuestNodes(nodeIds: string[]) {
+    if (nodeIds.length === 0) {
       return;
     }
-    currQuestline.value.quests = currQuestline.value.quests.filter((q: Quest) => q.id !== questId);
-    currQuestline.value.dependencies = currQuestline.value.dependencies.filter((dep: Dependency) => {
-      dep.from !== questId && dep.to !== questId;
-    });
+    currQuestline.value.quests = currQuestline.value.quests.filter(
+      quest => !nodeIds.includes(quest.id)
+    );
+    currQuestline.value.dependencies = currQuestline.value.dependencies.filter(
+      dep => !nodeIds.includes(dep.from) && !nodeIds.includes(dep.to)
+    );
 
-    if (selectedQuestForEdit.value?.id === questId) {
+    if (selectedQuestForEdit.value && nodeIds.includes(selectedQuestForEdit.value.id)) {
       closeQuestEditor();
     }
   }
@@ -335,8 +337,8 @@ export const useQuestStore = defineStore('quest', () => {
     showQuestEditor, showLoadModal, showHelpModal, isDarkMode, hoveredNodeId, hoveredEdgeId,
     // functions
     fetchAllQuestlines, loadQuestline, saveCurrentQuestline, deleteCurrentQuestline,
-    addQuestNode, updateQuestPosition, addQuestDependency, removeQuestNode,
-    removeQuestDependencies, openQuestForEdit, closeQuestEditor, updateQuestDetails,
+    addQuestNode, updateQuestPosition, addQuestDependency, removeQuestNodes, removeQuestDependencies,
+    openQuestForEdit, closeQuestEditor, updateQuestDetails,
     toggleLoadModal, openHelpModal, closeHelpModal, triggerExport, toggleDarkMode, 
     setHoveredNodeId, setHoveredEdgeId,
   };

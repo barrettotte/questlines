@@ -20,7 +20,7 @@
   };
 
   const handleDelete = () => {
-    store.removeQuestNode(props.id);
+    store.removeQuestNodes([props.data.id]);
   };
 
   const nodeStyle = computed(() => ({
