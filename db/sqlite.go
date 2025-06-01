@@ -2,26 +2,32 @@ package db
 
 import (
 	"database/sql"
+	"embed"
+	"fmt"
 	"log"
 	"questlines/models"
 	"time"
 
+	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database/sqlite3"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
+	"github.com/golang-migrate/migrate/v4/source/iofs"
 	"github.com/google/uuid"
 	_ "github.com/mattn/go-sqlite3"
 )
 
 var DB *sql.DB
 
-// InitDB initializes SQLite db connection and creates tables
-func InitDB(datasrc string) error {
+// InitDB initializes SQLite db connection and runs database migrations
+func InitDB(dataSourceName string, migrationsDir string, embeddedMigrations embed.FS) error {
 	var err error
-	DB, err = sql.Open("sqlite3", datasrc)
+	DB, err = sql.Open("sqlite3", dataSourceName)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to open database: %w", err)
 	}
 	if err = DB.Ping(); err != nil {
-		return err
+		return fmt.Errorf("failed to ping database: %w", err)
 	}
 
 	// enable foreign keys
@@ -31,49 +37,43 @@ func InitDB(datasrc string) error {
 		return err
 	}
 
-	// TODO: move to schema.sql?
-	createSQL := `
-	    CREATE TABLE IF NOT EXISTS questlines (
-	      id TEXT PRIMARY KEY,
-		  name TEXT NOT NULL,
-		  created DATETIME DEFAULT CURRENT_TIMESTAMP,
-		  updated DATETIME DEFAULT CURRENT_TIMESTAMP
-	    );
+	applyMigrations(migrationsDir, embeddedMigrations)
 
-	    CREATE TABLE IF NOT EXISTS quests (
-	      id TEXT PRIMARY KEY,
-		  questline_id TEXT NOT NULL,
-		  title TEXT NOT NULL,
-		  description TEXT,
-		  pos_x REAL DEFAULT 0,
-		  pos_y REAL DEFAULT 0,
-		  color TEXT,
-		  FOREIGN KEY (questline_id) REFERENCES questlines(id) ON DELETE CASCADE
-	    );
-
-		CREATE TABLE IF NOT EXISTS dependencies (
-		  questline_id TEXT NOT NULL,
-		  from_id TEXT NOT NULL,
-		  to_id TEXT NOT NULL,
-		  PRIMARY KEY (questline_id, from_id, to_id),
-		  FOREIGN KEY (questline_id) REFERENCES questlines(id) ON DELETE CASCADE,
-		  FOREIGN KEY (from_id) REFERENCES quests(id) ON DELETE CASCADE,
-		  FOREIGN KEY (to_id) REFERENCES quests(id) ON DELETE CASCADE
-		);
-
-		CREATE TRIGGER IF NOT EXISTS update_questline_modtime
-		AFTER UPDATE ON questlines
-		FOR EACH ROW
-		BEGIN
-		  UPDATE questlines SET updated=CURRENT_TIMESTAMP WHERE id=OLD.id;
-		END;
-	`
-	if _, err := DB.Exec(createSQL); err != nil {
-		return err
+	// verify db instance is still up
+	if err = DB.Ping(); err != nil {
+		return fmt.Errorf("failed to ping database after applying migrations: %w", err)
 	}
+
 	log.Println("Database initialized")
 
 	return nil
+}
+
+// applies database migrations
+func applyMigrations(migrationsDir string, embeddedMigrations embed.FS) {
+	driver, err := sqlite3.WithInstance(DB, &sqlite3.Config{})
+	if err != nil {
+		log.Fatalf("Migration driver error: %v", err)
+	}
+
+	srcDriver, err := iofs.New(embeddedMigrations, migrationsDir)
+	if err != nil {
+		log.Fatalf("Failed to open embedded migrations: %v", err)
+	}
+
+	m, err := migrate.NewWithInstance("iofs", srcDriver, "sqlite3", driver)
+	if err != nil {
+		log.Fatalf("Migration init error: %v", err)
+	}
+
+	err = m.Up()
+	if err != nil {
+		if err != migrate.ErrNoChange {
+			log.Fatalf("Migration apply error: %v", err)
+		}
+		log.Println("No migrations to apply.")
+	}
+	log.Println("Migrations completed.")
 }
 
 // GetQuestlineInfos fetches list of all questlines

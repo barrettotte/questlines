@@ -16,15 +16,20 @@ import (
 )
 
 //go:embed all:frontend/dist
-var embeddedFiles embed.FS
+var embeddedFrontend embed.FS
+
+//go:embed db/migrations/*.sql
+var embeddedMigrations embed.FS
 
 func main() {
 	port := "8080"
 	dbPath := "questlines.db"
-	//frontend := "frontend/dist"
+	migrationsDir := "db/migrations"
+	frontendDir := "frontend/dist"
+	baseApiPrefix := "/api"
 
 	// init db
-	if err := db.InitDB(dbPath); err != nil {
+	if err := db.InitDB(dbPath, migrationsDir, embeddedMigrations); err != nil {
 		log.Fatalf("Failed to initialize database: %v", err)
 	}
 	defer db.DB.Close()
@@ -34,8 +39,17 @@ func main() {
 	// setup middleware
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
+	allowedOrigins := []string{"http://localhost:" + port}
+
+	// add vue dev port when in development mode
+	appEnv := strings.ToLower(os.Getenv("APP_ENV"))
+	if appEnv == "development" || appEnv == "dev" {
+		devFrontendOrigin := "http://localhost:3000"
+		allowedOrigins = append(allowedOrigins, devFrontendOrigin)
+	}
+
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:3000", "http://localhost:" + port}, // TODO: 3000 needed?
+		AllowedOrigins:   allowedOrigins,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},
@@ -44,7 +58,7 @@ func main() {
 	}))
 
 	// setup API routes
-	r.Route("/api", func(r chi.Router) {
+	r.Route(baseApiPrefix, func(r chi.Router) {
 		r.Post("/questlines", api.CreateQuestlineHandler)
 		r.Get("/questlines", api.GetQuestlinesHandler)
 		r.Get("/questlines/{id}", api.GetQuestlineHandler)
@@ -54,7 +68,7 @@ func main() {
 	})
 
 	// get frontend assets
-	distFS, err := fs.Sub(embeddedFiles, "frontend/dist")
+	distFS, err := fs.Sub(embeddedFrontend, frontendDir)
 	if err != nil {
 		log.Fatalf("Failed to get embedded subdirectory: %v", err)
 	}
@@ -65,7 +79,7 @@ func main() {
 	// handle requests
 	r.HandleFunc("/*", func(w http.ResponseWriter, r *http.Request) {
 		// If API, let Chi handle it (it should have already, so this 404s unhandled API)
-		if strings.HasPrefix(r.URL.Path, "/api/") {
+		if strings.HasPrefix(r.URL.Path, baseApiPrefix) {
 			http.NotFound(w, r)
 			return
 		}
@@ -79,7 +93,7 @@ func main() {
 
 		// if file does not exists or base url, serve default
 		if os.IsNotExist(err) || fsPath == "" {
-			indexHTML, err := embeddedFiles.ReadFile("frontend/dist/index.html")
+			indexHTML, err := embeddedFrontend.ReadFile(frontendDir + "/index.html")
 			if err != nil {
 				log.Printf("ERROR: Could not read embedded index.html: %v", err)
 				http.Error(w, "index.html not found", http.StatusInternalServerError)
