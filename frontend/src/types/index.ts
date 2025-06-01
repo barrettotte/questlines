@@ -7,6 +7,7 @@ export interface Objective {
   id: string;
   text: string | null;
   completed: boolean;
+  sortIndex: number;
 }
 
 export interface Quest {
@@ -16,6 +17,7 @@ export interface Quest {
   position: Position;
   color?: string;
   objectives?: Objective[];
+  completed: boolean;
 }
 
 export interface Dependency {

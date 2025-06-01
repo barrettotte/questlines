@@ -108,7 +108,7 @@ func GetQuestline(id string) (*models.Questline, error) {
 	}
 
 	// fetch quests of questline
-	questRows, err := DB.Query("SELECT id, title, description, pos_x, pos_y, color FROM quests WHERE questline_id=?", id)
+	questRows, err := DB.Query("SELECT id, title, description, pos_x, pos_y, color, completed FROM quests WHERE questline_id=?", id)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query quests for questline %s: %w", id, err)
 	}
@@ -117,7 +117,8 @@ func GetQuestline(id string) (*models.Questline, error) {
 	questline.Quests = make([]models.Quest, 0)
 	for questRows.Next() {
 		var quest models.Quest
-		if err := questRows.Scan(&quest.Id, &quest.Title, &quest.Description, &quest.Position.X, &quest.Position.Y, &quest.Color); err != nil {
+		err := questRows.Scan(&quest.Id, &quest.Title, &quest.Description, &quest.Position.X, &quest.Position.Y, &quest.Color, &quest.Completed)
+		if err != nil {
 			return nil, fmt.Errorf("failed to scan quest for questline %s: %w", id, err)
 		}
 
@@ -185,7 +186,7 @@ func saveQuestline(tx *sql.Tx, questline *models.Questline, isUpdate bool) error
 	}
 
 	// insert quests
-	questStmt, err := tx.Prepare("INSERT INTO quests (id, questline_id, title, description, pos_x, pos_y, color) VALUES (?,?,?,?,?,?,?)")
+	questStmt, err := tx.Prepare("INSERT INTO quests (id, questline_id, title, description, pos_x, pos_y, color, completed) VALUES (?,?,?,?,?,?,?,?)")
 	if err != nil {
 		return fmt.Errorf("failed to prepare quest insert statement: %w", err)
 	}
@@ -202,7 +203,7 @@ func saveQuestline(tx *sql.Tx, questline *models.Questline, isUpdate bool) error
 			return fmt.Errorf("quest found with empty ID for quest_line %s", questline.Id)
 		}
 
-		_, err := questStmt.Exec(q.Id, questline.Id, q.Title, q.Description, q.Position.X, q.Position.Y, q.Color)
+		_, err := questStmt.Exec(q.Id, questline.Id, q.Title, q.Description, q.Position.X, q.Position.Y, q.Color, q.Completed)
 		if err != nil {
 			return fmt.Errorf("failed to insert quest %s for quest_line %s: %w", q.Id, questline.Id, err)
 		}

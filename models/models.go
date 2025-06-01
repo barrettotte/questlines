@@ -37,12 +37,13 @@ type Quest struct {
 	Position    Position    `json:"position"`
 	Color       string      `json:"color,omitempty"`
 	Objectives  []Objective `json:"objectives,omitempty"`
+	Completed   bool        `json:"completed"`
 }
 
 func (q Quest) String() string {
 	return fmt.Sprintf(
-		"Quest{Id: %q, QuestlineId: %v, Title: %v, Description: %v, Position: %v, Color: %v, Objectives: %v}",
-		q.Id, q.QuestlineId, q.Title, q.Description, q.Position, q.Color, q.Objectives,
+		"Quest{Id: %q, QuestlineId: %v, Title: %v, Description: %v, Position: %v, Color: %v, Objectives: %v, Completed: %v}",
+		q.Id, q.QuestlineId, q.Title, q.Description, q.Position, q.Color, q.Objectives, q.Completed,
 	)
 }
 

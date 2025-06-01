@@ -34,6 +34,36 @@ export const useQuestStore = defineStore('quest', () => {
     quests: [],
     dependencies: [],
   });
+
+  const getPrerequisiteQuestIds = (quest: Quest): string[] => {
+    return currQuestline.value.dependencies.filter(d => d.to === quest.id).map(d => d.from);
+  };
+
+  const areAllObjectivesCompleted = (quest: Quest): boolean => {
+    if (!quest.objectives || quest.objectives.length === 0) {
+      return true; // no objectives
+    }
+    return quest.objectives.every(o => o.completed);
+  };
+
+  const areAllPrerequisitesCompleted = (quest: Quest): boolean => {
+    const prereqIds = getPrerequisiteQuestIds(quest);
+    if (prereqIds.length === 0) {
+      return true; // no prerequisites
+    }
+    return prereqIds.every(prereqId => {
+      const prereqQuest = currQuestline.value.quests.find(q => q.id === prereqId);
+      return prereqQuest?.completed === true;
+    });
+  };
+
+  const canCompleteQuest = (questId: string): boolean => {
+    const quest = currQuestline.value.quests.find(q => q.id === questId);
+    if (!quest) {
+      return false;
+    }
+    return areAllObjectivesCompleted(quest) && areAllPrerequisitesCompleted(quest);
+  };
   
   // computed values
   const nodes = computed<Node[]>(() =>
@@ -208,6 +238,7 @@ export const useQuestStore = defineStore('quest', () => {
       position: finalPos,
       color: '#cccccc',
       objectives: [],
+      completed: false,
     };
     currQuestline.value.quests.push(newQuest);
   }
@@ -217,6 +248,24 @@ export const useQuestStore = defineStore('quest', () => {
     if (quest) {
       quest.position = newPos;
     }
+  }
+
+  function setQuestCompleted(questId: string, newStatus: boolean) {
+    const quest = currQuestline.value.quests.find((q: Quest) => q.id === questId);
+    if (!quest) {
+      return;
+    }
+
+    if (newStatus) {
+      if (canCompleteQuest(questId)) {
+        quest.completed = true;
+      } else {
+        console.warn(`Quest ${questId} cannot be marked complete: prerequisites or objectives not completed`);
+        // TODO: error message?
+      }
+      return;
+    }
+    quest.completed = false; // incomplete
   }
 
   function addQuestDependency(conn: Connection) {
@@ -251,6 +300,7 @@ export const useQuestStore = defineStore('quest', () => {
         id: uuidv4(),
         text: text || 'New objective',
         completed: false,
+        sortIndex: quest.objectives.length,
       });
     }
   }
@@ -259,6 +309,7 @@ export const useQuestStore = defineStore('quest', () => {
     const quest = currQuestline.value.quests.find(q => q.id === questId);
     if (quest && quest.objectives) {
       quest.objectives = quest.objectives.filter(o => o.id !== objectiveId);
+      // TODO: recalculate sortIndex?
     }
   }
 
@@ -396,7 +447,8 @@ export const useQuestStore = defineStore('quest', () => {
     addObjective, removeObjective, updateObjective,
     openQuestForEdit, openLoadModal, openHelpModal, isAnyModalOpen,
     closeQuestEditor, closeLoadModal, closeHelpModal, closeAllModals,
-    updateQuestDetails, triggerExport, toggleDarkMode, 
+    updateQuestDetails, setQuestCompleted, canCompleteQuest,
+    triggerExport, toggleDarkMode, 
     setHoveredNodeId, setHoveredEdgeId,
   };
 });

@@ -1,7 +1,7 @@
 <script setup lang="ts">
   import { Handle, Position, type NodeProps } from '@vue-flow/core';
   import { computed } from 'vue';
-  import { Edit3, Trash2, ClipboardList } from 'lucide-vue-next';
+  import { Edit3, Trash2, ClipboardList, CheckCircle, Circle } from 'lucide-vue-next';
 
   import type { Quest } from '../types';
   import { useQuestStore } from '../stores/questStore';
@@ -23,6 +23,10 @@
     store.removeQuestNodes([props.data.id]);
   };
 
+  const handleToggleCompletion = () => {
+    store.setQuestCompleted(props.data.id, !questData.value.completed);
+  };
+
   const nodeStyle = computed(() => ({
     borderColor: questData.value.color || 'var(--node-border)',
   }));
@@ -35,22 +39,42 @@
     return `${completed}/${questData.value.objectives.length}`;
   });
 
+  const isCompletable = computed(() => {
+    if (questData.value.completed) {
+      return true;
+    }
+    return store.canCompleteQuest(props.data.id);
+  });
+
 </script>
 
 <template>
   <div class="quest-node" :style="nodeStyle" :title="questData.title" 
-    :class="{ 'is-selected': selected, 'is-dragging': dragging }"
+    :class="{ 'is-selected': selected, 'is-dragging': dragging, 'is-completed': questData.completed }"
   >
-    <div class="quest-header">{{ questData.title || 'Untitled' }}</div>
+    <div class="quest-header">
+      <!-- <CheckCircle v-if="questData.completed" :size="13" class="completed-icon"/> -->
+      {{ questData.title || 'Untitled' }}
+    </div>
     <div class="quest-spacer"></div>
 
     <div class="quest-footer">
-      <div v-if="questProgress" class="quest-progress">
-        <ClipboardList :size="13" class="progress-icon"/> <span>{{ questProgress }}</span>
+      <div class="progress-and-complete">
+        <div v-if="questProgress" class="quest-progress">
+          <ClipboardList :size="13" class="progress-icon"/> <span>{{ questProgress }}</span>
+        </div>
+        <div v-else class="progress-placeholder-small"></div>
       </div>
-      <div v-else class="progress-placeholder"></div>
 
       <div class="quest-actions">
+        <button @click.stop="handleToggleCompletion" class="complete-toggle-btn"
+          :title="questData.completed ? 'Mark as Incomplete' : (isCompletable ? 'Mark as Complete' : 'Prerequisites/Objectives incomplete')"
+          :disabled="!questData.completed && !isCompletable"
+          :class="{ 'can-complete': !questData.completed && isCompletable, 'is-done': questData.completed }"
+        >
+          <CheckCircle v-if="questData.completed" :size="13"/>
+          <Circle v-else :size="13"/>
+        </button>
         <button @click.stop="handleEdit" title="Edit Quest" class="edit-btn">
           <Edit3 :size="13"/>
         </button>
@@ -115,6 +139,19 @@
     box-shadow: 0 5px 15px rgba(0,0,0,0.3);
   }
 
+  .quest-node.is-completed {
+    background-color: #00c14d;
+    opacity: 0.75;
+  }
+  html.dark .quest-node.is-completed {
+    background-color: #008d38;
+  }
+
+  .complete-toggle-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
   .quest-header {
     font-weight: bold;
     margin-bottom: 12px;
@@ -156,6 +193,16 @@
     flex-shrink: 0;
   }
 
+  .progress-and-complete {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .progress-placeholder-small {
+    min-width: 1px;
+  }
+
   .progress-placeholder {
     flex-grow: 1;
     min-width: 0;
@@ -190,6 +237,12 @@
   }
   .quest-actions .edit-btn:hover {
     color: var(--primary-color) !important;
+  }
+
+  .completed-icon {
+    color: var(--success-color);
+    margin-right: 6px;
+    flex-shrink: 0;
   }
 
 </style>

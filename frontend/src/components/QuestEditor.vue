@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import { storeToRefs } from 'pinia';
-  import { ref, watch } from 'vue';
+  import { computed, ref, watch } from 'vue';
   import { TrashIcon, X } from 'lucide-vue-next';
   import { v4 as uuidv4 } from 'uuid';
 
@@ -28,6 +28,16 @@
     '#264653',
   ];
 
+  const isCurrentQuestCompletable = computed(() => {
+    if (localQuestData.value && localQuestData.value.id) {
+      if (localQuestData.value.completed) {
+        return true;
+      }
+      return store.canCompleteQuest(localQuestData.value.id);
+    }
+    return false;
+  });
+
   const saveChanges = () => {
     if (localQuestData.value) {
       store.updateQuestDetails(localQuestData.value);
@@ -39,10 +49,12 @@
       if (!localQuestData.value.objectives) {
         localQuestData.value.objectives = [];
       }
+
       localQuestData.value.objectives.push({
         id: uuidv4(),
         text: newObjectiveText.value || 'New objective',
         completed: false,
+        sortIndex: localQuestData.value.objectives.length,
       });
       newObjectiveText.value = '';
     }
@@ -51,6 +63,7 @@
   const handleRemoveObjective = (objectiveId: string) => {
     if (localQuestData.value && localQuestData.value.objectives) {
       localQuestData.value.objectives = localQuestData.value.objectives.filter(o => o.id !== objectiveId);
+      // TODO: recalculate sortIndex?
     }
   };
 
@@ -76,6 +89,13 @@
       </div>
 
       <div class="modal-body">
+        <div class="form-group completion-status-editor">
+          <div class="status-label">Status:</div>
+          <span v-if="localQuestData.completed" class="status-completed">Completed</span>
+          <span v-else-if="isCurrentQuestCompletable" class="status-pending">Ready to Complete</span>
+          <span v-else class="status-blocked">Blocked</span>
+        </div>
+
         <div class="form-group">
           <label for="questTitle">Title</label>
           <input id="questTitle" type="text" class="input-field" v-model="localQuestData.title"/>
@@ -103,15 +123,16 @@
           <label>Objectives</label>
           <div v-if="localQuestData.objectives && localQuestData.objectives.length > 0" class="objective-items">
             <div v-for="(item, _) in localQuestData.objectives" :key="item.id" class="objective-item">
-              <input type="checkbox" v-model="item.completed" :id="`item-${item.id}`"/>
-              <input type="text" v-model="item.text" class="input-field objective-item-text" placeholder="Objective description"/>
+              <input type="checkbox" v-model="item.completed" :id="`item-${item.id}-checkbox`"/>
+              <input type="text" v-model="item.text" class="input-field objective-item-text" placeholder="Objective description" :id="`item-${item.id}-text`"/>
               <button @click="handleRemoveObjective(item.id)" class="btn-icon-only btn-danger-icon" title="Remove Objective">
                 <TrashIcon :size="16"/>
               </button>
             </div>
           </div>
           <div class="add-objective-item">
-            <input type="text" v-model="newObjectiveText" class="input-field" placeholder="New objective text" @keyup.enter="handleAddObjective"/>
+            <input type="text" v-model="newObjectiveText" class="input-field" placeholder="New objective text" 
+              @keyup.enter="handleAddObjective" :id="`${localQuestData.id}-new-objective-text`"/>
             <button @click="handleAddObjective" class="btn btn-secondary btn-add-item" title="Add Objective">
               <PlusCircle :size="18"/> Add
             </button>
@@ -140,6 +161,32 @@
     display: block;
     margin-bottom: 5px;
     font-weight: 500;
+  }
+
+  .completion-status-editor {
+    margin-top: 5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .completion-status-editor .status-label {
+    display: block;
+    font-weight: 500;
+    margin-bottom: 5px;
+    margin-right: 8px;
+    flex-shrink: 0;
+  }
+  .status-completed {
+    color: var(--success-color);
+    font-weight: bold;
+  }
+  .status-pending {
+    color: var(--secondary-color);
+  }
+  .status-blocked {
+    color: var(--danger-color);
+    font-size: 0.9em;
   }
 
   .color-swatches {

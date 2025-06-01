@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS quests (
     pos_x REAL DEFAULT 0,
     pos_y REAL DEFAULT 0,
     color TEXT,
+    completed BOOLEAN DEFAULT FALSE NOT NULL,
     FOREIGN KEY (questline_id) REFERENCES questlines(id) ON DELETE CASCADE
 );
 
@@ -32,7 +33,7 @@ CREATE TABLE IF NOT EXISTS objectives (
     id TEXT PRIMARY KEY,
     quest_id TEXT NOT NULL,
     text TEXT NOT NULL,
-    completed BOOLEAN DEFAULT FALSE,
+    completed BOOLEAN DEFAULT FALSE NOT NULL,
     sort_index INTEGER DEFAULT 0,
     FOREIGN KEY (quest_id) REFERENCES quests(id) ON DELETE CASCADE
 );
