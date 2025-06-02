@@ -108,15 +108,17 @@
 
         <div class="form-group">
           <label for="questColor">Color</label>
-          <div class="color-swatches">
-            <button v-for="color in predefinedColors"
-              :key="color" class="color-swatch" 
-              :class="{ selected: localQuestData.color === color}"
-              :style="{ backgroundColor: color }"
-              @click="localQuestData!.color = color"
-            ></button>
+          <div class="color-selector-group">
+            <div class="color-swatches">
+              <button v-for="color in predefinedColors"
+                :key="color" class="color-swatch" 
+                :class="{ selected: localQuestData.color === color}"
+                :style="{ backgroundColor: color }"
+                @click="localQuestData!.color = color"
+              ></button>
+            </div>
+            <input id="questColor" type="color" v-model="localQuestData.color"/>
           </div>
-          <input id="questColor" type="color" class="color-picker-input" v-model="localQuestData.color"/>
         </div>
 
         <div class="form-group">
@@ -189,35 +191,52 @@
     font-size: 0.9em;
   }
 
+  .color-selector-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 5px;
+  }
+
+  .color-selector-group input[type="color"] {
+    appearance: none;
+    -moz-appearance: none;
+    -webkit-appearance: none;
+    background: none;
+    border: 0;
+    cursor: pointer;
+    padding: 0;
+    height: 30px;
+    width: 34px;
+  }
+
   .color-swatches {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 10px;
+    gap: 6px;
+    align-items: center;
   }
 
   .color-swatch {
-    width: 24px;
-    height: 24px;
+    width: 25px;
+    height: 25px;
+    box-sizing: border-box;
     border-radius: 50%;
     cursor: pointer;
     border: 2px solid transparent;
-    transition: border-color 0.2s ease;
+    transition: border-color 0.2s ease transform 0.1s ease-out;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  }
+  .color-swatch:hover {
+    transform: scale(1.1);
   }
   .color-swatch.selected {
     border-color: #333;
+    box-shadow: 0 0 0 2px var(--primary-color);
   }
   html.dark .color-swatch.selected {
     border-color: #fff;
-  }
-
-  .color-picker-input {
-    width: 100%;
-    height: 40px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    padding: 0 5px;
-    cursor: pointer;
+    box-shadow: 0 0 0 2px var(--info-color);
   }
 
   .objective-items {
