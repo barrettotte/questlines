@@ -1,4 +1,4 @@
-import { ref, computed } from 'vue';
+import { ref, computed, nextTick } from 'vue';
 import { defineStore } from 'pinia';
 import { type Connection, type Node, type Edge, MarkerType } from '@vue-flow/core';
 import { v4 as uuidv4 } from 'uuid';
@@ -9,8 +9,10 @@ import type { Questline, Quest, Dependency, QuestlineInfo, Position as QuestPosi
 export const useQuestStore = defineStore('quest', () => {
 
   // constants
-  const errorMsgWaitMs = 3000;
-  const successMsgWaitMs = 5000;
+  const ERROR_MSG_WAIT_MS = 3000;
+  const SUCCESS_MSG_WAIT_MS = 5000;
+  const IS_DARK_MODE_KEY = "isDarkMode";
+  const LAST_ACTIVE_QUESTLINE_ID_KEY = "lastActiveQuestlineId";
   
   // state
   const allQuestlines = ref<QuestlineInfo[]>([]);
@@ -126,7 +128,7 @@ export const useQuestStore = defineStore('quest', () => {
     });
   });
 
-  function handleError(e: unknown, msg: string, duration: number = successMsgWaitMs) {
+  function handleError(e: unknown, msg: string, duration: number = SUCCESS_MSG_WAIT_MS) {
     console.error(msg, e);
     const errMsg = e instanceof Error ? e.message : String(e);
     errorMsg.value = `${msg}: ${errMsg}`;
@@ -134,7 +136,7 @@ export const useQuestStore = defineStore('quest', () => {
     setTimeout(() => (errorMsg.value = null), duration);
   }
 
-  function handleSuccess(msg: string, duration: number = errorMsgWaitMs) {
+  function handleSuccess(msg: string, duration: number = ERROR_MSG_WAIT_MS) {
     successMsg.value = msg;
     errorMsg.value = null;
     setTimeout(() => (successMsg.value = null), duration);
@@ -163,33 +165,50 @@ export const useQuestStore = defineStore('quest', () => {
   }
 
   async function loadQuestline(id: string | null) {
-    if (!id) {
-      currQuestline.value = {
-        id: uuidv4(),
-        name: 'Untitled',
-        quests: [],
-        dependencies: [],
-      };
-    } else {
-      isLoading.value = true;
-      errorMsg.value = null;
+    isLoading.value = true;
+    errorMsg.value = null;
 
-      try {
-        currQuestline.value = await apiService.getQuestline(id);
-      } catch (e) {
-        handleError(e, `Failed to load questline ${id}`);
-      } finally {
-        isLoading.value = false;
+    const blankQuestline = {
+      id: uuidv4(),
+      name: 'Untitled',
+      quests: [],
+      dependencies: [],
+    };
+    try {
+      if (!id) {
+        currQuestline.value = blankQuestline;
+        localStorage.removeItem(LAST_ACTIVE_QUESTLINE_ID_KEY);
+      } else {
+        const data = await apiService.getQuestline(id);
+        currQuestline.value = data;
+        localStorage.setItem(LAST_ACTIVE_QUESTLINE_ID_KEY, id);
       }
+
+      // reset editor/selection state
+      if (typeof selectedQuestForEdit !== 'undefined') {
+        selectedQuestForEdit.value = null;
+      }
+      if (typeof showQuestEditor !== 'undefined') {
+        showQuestEditor.value = false;
+      }
+      await nextTick();
+    } catch (e) {
+      handleError(e, `Failed to load questline ${id}`);
+      localStorage.removeItem(LAST_ACTIVE_QUESTLINE_ID_KEY);
+
+      // fallback to empty questline
+      if (currQuestline.value.id === id || id !== null) {
+        currQuestline.value = blankQuestline;
+      }
+    } finally {
+      isLoading.value = false;
     }
-    selectedQuestForEdit.value = null;
-    showQuestEditor.value = false;
   }
 
   async function saveCurrentQuestline() {
     if (!currQuestline.value.name.trim()) {
       errorMsg.value = 'Questline name cannot be empty';
-      setTimeout(() => errorMsg.value = null, errorMsgWaitMs);
+      setTimeout(() => errorMsg.value = null, ERROR_MSG_WAIT_MS);
       return;
     }
     isLoading.value = true;
@@ -210,8 +229,13 @@ export const useQuestStore = defineStore('quest', () => {
         saved = await apiService.createQuestline(toSend);
       }
       currQuestline.value = saved;
+
+      if (saved.id) {
+        localStorage.setItem(LAST_ACTIVE_QUESTLINE_ID_KEY, saved.id);
+      }
       await fetchAllQuestlines();
       handleSuccess('Questline saved.');
+
     } catch (e) {
       handleError(e, 'Failed to save questline');
     } finally {
@@ -224,7 +248,7 @@ export const useQuestStore = defineStore('quest', () => {
     if (!id || !(allQuestlines.value as Questline[]).some((q: Questline) => q.id === id)) {
       errorMsg.value = 'Please save before deleting, or select a saved questline';
       successMsg.value = null;
-      setTimeout(() => errorMsg.value = null, errorMsgWaitMs);
+      setTimeout(() => errorMsg.value = null, ERROR_MSG_WAIT_MS);
       return;
     }
     if (!confirm('Are you sure?')) {
@@ -235,8 +259,14 @@ export const useQuestStore = defineStore('quest', () => {
 
     try {
       await apiService.deleteQuestline(id);
+      const cachedId = localStorage.getItem(LAST_ACTIVE_QUESTLINE_ID_KEY);
+
+      if (cachedId === id) {
+        localStorage.removeItem(LAST_ACTIVE_QUESTLINE_ID_KEY);
+      }
       await fetchAllQuestlines();
       await loadQuestline(null); // load empty
+
     } catch (e) {
       handleError(e, 'Failed to delete questline');
     } finally {
@@ -301,7 +331,7 @@ export const useQuestStore = defineStore('quest', () => {
     });
     if (exists || conn.source === conn.target) {
       errorMsg.value = 'Cannot create duplicate or self-referencing link.';
-      setTimeout(() => errorMsg.value = null, errorMsgWaitMs);
+      setTimeout(() => errorMsg.value = null, ERROR_MSG_WAIT_MS);
       return;
     }
 
@@ -417,7 +447,7 @@ export const useQuestStore = defineStore('quest', () => {
 
     if (idx === -1) {
       errorMsg.value = `Quest ${updated.id} could not be found for update.`;
-      setTimeout(() => errorMsg.value = null, errorMsgWaitMs);
+      setTimeout(() => errorMsg.value = null, ERROR_MSG_WAIT_MS);
       closeQuestEditor();
       return;
     }
@@ -474,7 +504,7 @@ export const useQuestStore = defineStore('quest', () => {
   function triggerExport(fmt: string) {
     if (!currQuestline.value.id || !(allQuestlines.value as Questline[]).some((q: Questline) => q.id === currQuestline.value.id)) {
       errorMsg.value = 'Please save questline before exporting';
-      setTimeout(() => errorMsg.value = null, errorMsgWaitMs);
+      setTimeout(() => errorMsg.value = null, ERROR_MSG_WAIT_MS);
       return;
     }
     apiService.exportQuestline(currQuestline.value.id, fmt);
@@ -482,7 +512,7 @@ export const useQuestStore = defineStore('quest', () => {
 
   function applyDarkMode(active: boolean) {
     isDarkMode.value = active;
-    localStorage.setItem('isDarkMode', String(active));
+    localStorage.setItem(IS_DARK_MODE_KEY, String(active));
 
     if (active) {
       document.documentElement.classList.add('dark');
@@ -494,7 +524,7 @@ export const useQuestStore = defineStore('quest', () => {
   function toggleDarkMode() {
     applyDarkMode(!isDarkMode.value);
   }
-  applyDarkMode(localStorage.getItem('isDarkMode') === 'true');
+  applyDarkMode(localStorage.getItem(IS_DARK_MODE_KEY) === 'true');
 
   function setHoveredNodeId(id: string | null) {
     hoveredNodeId.value = id;
@@ -505,6 +535,8 @@ export const useQuestStore = defineStore('quest', () => {
   }
 
   return {
+    // constants
+    LAST_ACTIVE_QUESTLINE_ID_KEY,
     // properties
     currQuestline, allQuestlines, 
     isLoading, errorMsg, successMsg, 

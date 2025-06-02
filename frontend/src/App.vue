@@ -16,9 +16,21 @@
 
   const questBoardRef = ref<ExposedQuestBoard | null>(null);
 
-  onMounted(() => {
-    store.fetchAllQuestlines();
-    store.loadQuestline(null);
+  onMounted(async () => {
+    await store.fetchAllQuestlines(); // fetch all for load modal
+
+    // load questline using cached id
+    const cachedId = localStorage.getItem(store.LAST_ACTIVE_QUESTLINE_ID_KEY);
+    if (cachedId) {
+      await store.loadQuestline(cachedId);
+
+      if (store.currQuestline?.id !== cachedId) {
+        console.warn(`Failed to load cached questline ${cachedId} on app load.`);
+      }
+    } else {
+      await store.loadQuestline(null);
+    }
+
     window.addEventListener('keydown', handleWindowLevelShortcuts);
   });
 
