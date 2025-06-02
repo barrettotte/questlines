@@ -4,7 +4,7 @@ import { type Connection, type Node, type Edge, MarkerType } from '@vue-flow/cor
 import { v4 as uuidv4 } from 'uuid';
 
 import { apiService } from '../services/api';
-import type { Questline, Quest, Dependency, QuestlineInfo, Position as QuestPosition, Objective } from '../types';
+import type { Questline, Quest, Dependency, QuestlineInfo, Position as QuestPosition } from '../types';
 
 export const useQuestStore = defineStore('quest', () => {
 
@@ -64,8 +64,28 @@ export const useQuestStore = defineStore('quest', () => {
     }
     return areAllObjectivesCompleted(quest) && areAllPrerequisitesCompleted(quest);
   };
-  
-  // computed values
+
+  // cascade marking quests an uncomplete when an upstream quest is marked as uncomplete
+  // or when upstream quests or dependencies are deleted
+  function cascadeUncomplete(questIdUncompleted: string) {
+    if (!currQuestline.value) {
+      return;
+    }
+    const quests = currQuestline.value.quests;
+    const dependencies = currQuestline.value.dependencies;
+
+    dependencies.forEach(dep => {
+      if (dep.from === questIdUncompleted) {
+        const downstreamQuest = quests.find(q => q.id === dep.to);
+
+        if (downstreamQuest && downstreamQuest.completed) {
+          downstreamQuest.completed = false;
+          cascadeUncomplete(downstreamQuest.id); // recurse
+        }
+      }
+    });
+  }
+
   const nodes = computed<Node[]>(() =>
     currQuestline.value.quests.map((q: Quest): Node<Quest> => ({
       id: q.id,
@@ -106,7 +126,6 @@ export const useQuestStore = defineStore('quest', () => {
     });
   });
 
-  // handlers
   function handleError(e: unknown, msg: string, duration: number = successMsgWaitMs) {
     console.error(msg, e);
     const errMsg = e instanceof Error ? e.message : String(e);
@@ -133,7 +152,6 @@ export const useQuestStore = defineStore('quest', () => {
   async function fetchAllQuestlines() {
     isLoading.value = true;
     resetMessages();
-
     try {
       allQuestlines.value = (await apiService.getQuestlines()) || [];
     } catch (e) {
@@ -164,7 +182,6 @@ export const useQuestStore = defineStore('quest', () => {
         isLoading.value = false;
       }
     }
-
     selectedQuestForEdit.value = null;
     showQuestEditor.value = false;
   }
@@ -263,9 +280,14 @@ export const useQuestStore = defineStore('quest', () => {
         console.warn(`Quest ${questId} cannot be marked complete: prerequisites or objectives not completed`);
         // TODO: error message?
       }
-      return;
+    } else {
+      if (quest.completed) {
+        quest.completed = false;
+        cascadeUncomplete(questId);
+      } else {
+        quest.completed = false; // incomplete
+      }
     }
-    quest.completed = false; // incomplete
   }
 
   function addQuestDependency(conn: Connection) {
@@ -283,10 +305,7 @@ export const useQuestStore = defineStore('quest', () => {
       return;
     }
 
-    const newDep: Dependency = {
-      from: conn.source,
-      to: conn.target,
-    };
+    const newDep: Dependency = { from: conn.source, to: conn.target };
     currQuestline.value.dependencies.push(newDep);
   }
 
@@ -313,45 +332,73 @@ export const useQuestStore = defineStore('quest', () => {
     }
   }
 
-  function updateObjective(questId: string, updated: Objective) {
-    const quest = currQuestline.value.quests.find(q => q.id === questId);
-
-    if (quest && quest.objectives) {
-      const existingObjective = quest.objectives.find(o => o.id === updated.id);
-
-      if (existingObjective) {
-        if (updated.text !== undefined && updated.text !== null) {
-          existingObjective.text = updated.text;
-        }
-        if (updated.completed !== undefined && updated.completed !== null) {
-          existingObjective.completed = updated.completed;
-        }
-      }
-    }
-  }
-
   function removeQuestNodes(nodeIds: string[]) {
     if (nodeIds.length === 0) {
       return;
     }
-    currQuestline.value.quests = currQuestline.value.quests.filter(
-      quest => !nodeIds.includes(quest.id)
-    );
-    currQuestline.value.dependencies = currQuestline.value.dependencies.filter(
-      dep => !nodeIds.includes(dep.from) && !nodeIds.includes(dep.to)
-    );
+    const questsBeforeDelete = [...currQuestline.value.quests];
+    const depsBeforeDelete = [...currQuestline.value.dependencies];
+    const downstreamQuests = new Set<string>();
 
-    if (selectedQuestForEdit.value && nodeIds.includes(selectedQuestForEdit.value.id)) {
-      closeQuestEditor();
-    }
+    // find completed quests that directly depend on any node being deleted
+    nodeIds.forEach(nodeId => {
+      depsBeforeDelete.forEach(dep => {
+        if (dep.from === nodeId) {
+          const downstreamQuest = questsBeforeDelete.find(q => q.id === dep.to);
+          // if downstream quest was completed it needs to be updated after delete
+          if (downstreamQuest && downstreamQuest.completed) {
+            downstreamQuests.add(downstreamQuest.id);
+          }
+        }
+      });
+    });
+
+    // delete quests and find their direct dependencies
+    currQuestline.value.quests = currQuestline.value.quests.filter(q => !nodeIds.includes(q.id));
+    currQuestline.value.dependencies = currQuestline.value.dependencies.filter(d => !nodeIds.includes(d.from) && !nodeIds.includes(d.to));
+
+    // downstream quests that were completed need to be marked incomplete
+    downstreamQuests.forEach(downstreamQuestId => {
+      const quest = currQuestline.value.quests.find(q => q.id === downstreamQuestId);
+      if (quest) {
+        quest.completed = false;
+        cascadeUncomplete(quest.id);
+      }
+    });
   }
 
   function removeQuestDependencies(edgeIds: string[]) {
     if (edgeIds.length === 0) {
       return;
     }
-    currQuestline.value.dependencies = currQuestline.value.dependencies.filter((dep: Dependency, index: number) => {
-      return !edgeIds.includes(getEdgeId(dep, index));
+    const quests = currQuestline.value.quests;
+    const depsToCascade = new Set<string>();
+
+    // filter out deps and collect quests of removed dependencies that were connected to a completed quest
+    const remainingDeps: Dependency[] = [];
+    currQuestline.value.dependencies.forEach((dep, idx) => {
+      const currDepId = getEdgeId(dep, idx);
+      
+      if (edgeIds.includes(currDepId)) {
+        const quest = quests.find(q => q.id === dep.to);
+
+        // if quest was completed, its not anymore and missing a dependency
+        if (quest && quest.completed) {
+          depsToCascade.add(dep.to);
+        }
+      } else {
+        remainingDeps.push(dep);
+      }
+    });
+    currQuestline.value.dependencies = remainingDeps;
+
+    // update downstream quests connected to deleted dependencies to uncomplete
+    depsToCascade.forEach(questId => {
+      const quest = quests.find(q => q.id === questId);
+      if (quest && quest.completed) {
+        quest.completed = false;
+        cascadeUncomplete(quest.id);
+      }
     });
   }
 
@@ -367,8 +414,32 @@ export const useQuestStore = defineStore('quest', () => {
 
   function updateQuestDetails(updated: Quest) {
     const idx = currQuestline.value.quests.findIndex((q: Quest) => q.id === updated.id);
-    if (idx !== -1) {
-      currQuestline.value.quests[idx] = { ...updated };
+
+    if (idx === -1) {
+      errorMsg.value = `Quest ${updated.id} could not be found for update.`;
+      setTimeout(() => errorMsg.value = null, errorMsgWaitMs);
+      closeQuestEditor();
+      return;
+    }
+    const original = currQuestline.value.quests[idx];
+    const wasOriginallyCompleted = original.completed;
+
+    // apply updates from editor
+    currQuestline.value.quests[idx] = {
+      ...original,
+      title: updated.title,
+      description: updated.description,
+      color: updated.color,
+      objectives: updated.objectives ? JSON.parse(JSON.stringify(updated.objectives)) : [], // deep copy
+      completed: wasOriginallyCompleted,
+    };
+    const afterUpdate = currQuestline.value.quests[idx];
+    const nowCompleted = canCompleteQuest(afterUpdate.id);
+
+    // quest was complete, but editor changes made it incomplete
+    if (wasOriginallyCompleted && !nowCompleted) {
+      afterUpdate.completed = false;
+      cascadeUncomplete(afterUpdate.id);
     }
     closeQuestEditor();
   }
@@ -444,7 +515,7 @@ export const useQuestStore = defineStore('quest', () => {
     fetchAllQuestlines, loadQuestline, saveCurrentQuestline, deleteCurrentQuestline,
     addQuestNode, updateQuestPosition, addQuestDependency, 
     removeQuestNodes, removeQuestDependencies,
-    addObjective, removeObjective, updateObjective,
+    addObjective, removeObjective,
     openQuestForEdit, openLoadModal, openHelpModal, isAnyModalOpen,
     closeQuestEditor, closeLoadModal, closeHelpModal, closeAllModals,
     updateQuestDetails, setQuestCompleted, canCompleteQuest,
