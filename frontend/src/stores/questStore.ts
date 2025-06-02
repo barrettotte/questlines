@@ -185,10 +185,10 @@ export const useQuestStore = defineStore('quest', () => {
       }
 
       // reset editor/selection state
-      if (typeof selectedQuestForEdit !== 'undefined') {
+      if (typeof selectedQuestForEdit.value !== 'undefined') {
         selectedQuestForEdit.value = null;
       }
-      if (typeof showQuestEditor !== 'undefined') {
+      if (typeof showQuestEditor.value !== 'undefined') {
         showQuestEditor.value = false;
       }
       await nextTick();
@@ -327,7 +327,7 @@ export const useQuestStore = defineStore('quest', () => {
 
     // check for bad links
     const exists = currQuestline.value.dependencies.some((dep: Dependency) => {
-      dep.from === conn.source && dep.to === conn.target
+      return dep.from === conn.source && dep.to === conn.target
     });
     if (exists || conn.source === conn.target) {
       errorMsg.value = 'Cannot create duplicate or self-referencing link.';

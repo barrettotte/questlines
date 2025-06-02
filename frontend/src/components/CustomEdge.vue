@@ -2,9 +2,7 @@
   import { computed } from 'vue';
   import { BaseEdge, getBezierPath, type EdgeProps } from '@vue-flow/core'
 
-  interface CustomEdgeProps extends EdgeProps {};
-
-  const props = defineProps<CustomEdgeProps>();
+  const props = defineProps<EdgeProps>();
 
   // calculate path for edge
   const pathDetails = computed(() => getBezierPath({

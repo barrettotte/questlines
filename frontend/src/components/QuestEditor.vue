@@ -124,7 +124,7 @@
         <div class="form-group">
           <label>Objectives</label>
           <div v-if="localQuestData.objectives && localQuestData.objectives.length > 0" class="objective-items">
-            <div v-for="(item, _) in localQuestData.objectives" :key="item.id" class="objective-item">
+            <div v-for="item in localQuestData.objectives" :key="item.id" class="objective-item">
               <input type="checkbox" v-model="item.completed" :id="`item-${item.id}-checkbox`"/>
               <input type="text" v-model="item.text" class="input-field objective-item-text" placeholder="Objective description" :id="`item-${item.id}-text`"/>
               <button @click="handleRemoveObjective(item.id)" class="btn-icon-only btn-danger-icon" title="Remove Objective">
