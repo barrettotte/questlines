@@ -59,12 +59,15 @@ func main() {
 
 	// setup API routes
 	r.Route(baseApiPrefix, func(r chi.Router) {
+		// questlines
 		r.Post("/questlines", api.CreateQuestlineHandler)
 		r.Get("/questlines", api.GetQuestlinesHandler)
 		r.Get("/questlines/{id}", api.GetQuestlineHandler)
 		r.Put("/questlines/{id}", api.UpdateQuestlineHandler)
 		r.Delete("/questlines/{id}", api.DeleteQuestlineHandler)
 		r.Get("/questlines/{id}/export", api.ExportQuestlineHandler)
+		// misc
+		r.Get("/up", api.UpHandler)
 	})
 
 	// get frontend assets

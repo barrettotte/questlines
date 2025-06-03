@@ -11,6 +11,11 @@ import (
 	"github.com/go-chi/chi"
 )
 
+type HealthStatus struct {
+	Api bool `json:"api"`
+	Db  bool `json:"db"`
+}
+
 // helper for sending json responses
 func respondJSON(w http.ResponseWriter, status int, payload interface{}) {
 	resp, err := json.Marshal(payload)
@@ -29,6 +34,22 @@ func respondJSON(w http.ResponseWriter, status int, payload interface{}) {
 func respondError(w http.ResponseWriter, code int, msg string) {
 	log.Printf("error: %s", msg)
 	respondJSON(w, code, map[string]string{"error": msg})
+}
+
+// UpHandler handles GET /api/up for health status
+func UpHandler(w http.ResponseWriter, r *http.Request) {
+	status := HealthStatus{Api: true, Db: false}
+
+	if db.DB != nil {
+		if err := db.DB.Ping(); err != nil {
+			log.Printf("WARN: Health check DB ping failed: %v", err)
+		} else {
+			status.Db = true
+		}
+	} else {
+		log.Printf("WARN: Health check found DB is nil")
+	}
+	respondJSON(w, http.StatusOK, status)
 }
 
 // GetQuestlinesHandler handles GET /api/questlines
