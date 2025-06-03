@@ -308,7 +308,6 @@ export const useQuestStore = defineStore('quest', () => {
         quest.completed = true;
       } else {
         console.warn(`Quest ${questId} cannot be marked complete: prerequisites or objectives not completed`);
-        // TODO: error message?
       }
     } else {
       if (quest.completed) {
@@ -540,7 +539,7 @@ export const useQuestStore = defineStore('quest', () => {
     // properties
     currQuestline, allQuestlines, 
     isLoading, errorMsg, successMsg, 
-    nodes, edges, selectedQuestForEdit, 
+    nodes, edges, selectedQuestForEdit,
     showQuestEditor, showLoadModal, showHelpModal, isDarkMode, 
     hoveredNodeId, hoveredEdgeId,
     // functions

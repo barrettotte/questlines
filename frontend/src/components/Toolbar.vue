@@ -1,6 +1,7 @@
 <script setup lang="ts">
+  import { computed } from 'vue';
   import { storeToRefs } from 'pinia';
-  import { Plus, Trash2, Save, Download, UploadCloud, Zap, Moon, Sun, HelpCircle } from 'lucide-vue-next';
+  import { Download, HelpCircle, ListChecks, Moon, Plus, Save, Sun, Trash2, UploadCloud, Zap } from 'lucide-vue-next';
 
   import { useQuestStore } from '../stores/questStore';
   import type { ExposedQuestBoard } from '../types';
@@ -8,9 +9,16 @@
   const store = useQuestStore();
   const { currQuestline, isLoading, isDarkMode } = storeToRefs(store);
 
-  const props = defineProps<{
-    questBoardInstance: ExposedQuestBoard | null
-  }>();
+  const props = defineProps<{ questBoardInstance: ExposedQuestBoard | null }>();
+
+  const questlineProgress = computed(() => {
+    if (!currQuestline.value || !currQuestline.value.quests) {
+      return '0 / 0';
+    }
+    const completed = currQuestline.value.quests.filter(q => q.completed).length;
+    const total = currQuestline.value.quests.length;
+    return `${completed} / ${total}`;
+  });
 
   const handleAddQuest = () => {
     if (props.questBoardInstance && typeof props.questBoardInstance.addNewQuestAtViewportCenter === 'function') {
@@ -26,7 +34,14 @@
 <template>
   <div class="toolbar">
     <span class="toolbar-title">Questlines</span>
-    <input type="text" class="toolbar-input" placeholder="Questline Name" name="questline-name" v-model="currQuestline.name"/>
+    <input type="text" class="toolbar-input questline-name-input" placeholder="Questline Name" name="questline-name" v-model="currQuestline.name"/>
+
+    <!-- Questline stats -->
+    <div v-if="currQuestline && currQuestline.id" class="quest-stats" title="Questline Progress">
+      <ListChecks :size="16" class="stats-icon"/>
+      <span>{{ questlineProgress }} </span>
+    </div>
+    <div class="toolbar-spacer"></div>
 
     <!-- Questline actions -->
     <div class="toolbar-group">
@@ -116,6 +131,44 @@
     height: 25px;
     background-color: #555;
     margin: 0 10px;
+    flex-shrink: 0;
+  }
+
+  .toolbar-spacer {
+    flex-grow: 1;
+  }
+
+  .questline-name-input {
+    padding: 8px 12px;
+    border: 1px solid var(--toolbar-input-border);
+    border-radius: 4px;
+    background-color: var(--toolbar-input-bg);
+    color: var(--toolbar-text);
+    flex-grow: 0;
+    flex-shrink: 0;
+    flex-basis: 250px;
+    margin-right: 10px;
+  }
+
+  .quest-stats {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 10px;
+    margin-right: 10px;
+    font-size: 0.9em;
+    color: var(--toolbar-text);
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  html.dark .quest-stats {
+    background-color: rgba(0, 0, 0, 0.2);
+  }
+
+  .stats-icon {
+    margin-right: 8px;
+    opacity: 0.8;
   }
 
 </style>
