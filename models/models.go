@@ -74,11 +74,15 @@ func (ql Questline) String() string {
 }
 
 type QuestlineInfo struct {
-	Id      string    `json:"id"`
-	Name    string    `json:"name"`
-	Updated time.Time `json:"updated"`
+	Id              string    `json:"id"`
+	Name            string    `json:"name"`
+	Updated         time.Time `json:"updated"`
+	TotalQuests     int       `json:"totalQuests"`
+	CompletedQuests int       `json:"completedQuests"`
 }
 
 func (q QuestlineInfo) String() string {
-	return fmt.Sprintf("QuestlineInfo{Id: %v, Name: %v, Updated: %v}", q.Id, q.Name, q.Updated.Format(time.RFC3339))
+	return fmt.Sprintf("QuestlineInfo{Id: %v, Name: %v, Updated: %v, TotalQuests: %d, CompletedQuests: %d}",
+		q.Id, q.Name, q.Updated.Format(time.RFC3339), q.TotalQuests, q.CompletedQuests,
+	)
 }

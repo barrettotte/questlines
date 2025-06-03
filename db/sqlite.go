@@ -77,7 +77,15 @@ func applyMigrations(migrationsDir string, embeddedMigrations embed.FS) {
 
 // GetQuestlineInfos fetches list of all questlines
 func GetQuestlineInfos() ([]models.QuestlineInfo, error) {
-	rows, err := DB.Query("SELECT id, name, updated FROM questlines ORDER BY updated DESC")
+	query := `
+		SELECT ql.id, ql.name, ql.updated,
+		  (SELECT COUNT(*) FROM quests WHERE questline_id=ql.id) AS total_quests,
+		  (SELECT COUNT(*) FROM quests WHERE questline_id=ql.id AND completed=TRUE) AS completed_quests
+		FROM questlines AS ql
+		ORDER BY ql.updated DESC
+	`
+
+	rows, err := DB.Query(query)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query questlines: %w", err)
 	}
@@ -87,7 +95,7 @@ func GetQuestlineInfos() ([]models.QuestlineInfo, error) {
 	for rows.Next() {
 		var info models.QuestlineInfo
 
-		if err := rows.Scan(&info.Id, &info.Name, &info.Updated); err != nil {
+		if err := rows.Scan(&info.Id, &info.Name, &info.Updated, &info.TotalQuests, &info.CompletedQuests); err != nil {
 			return nil, fmt.Errorf("failed to scan questline: %w", err)
 		}
 		infos = append(infos, info)

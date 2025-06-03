@@ -37,6 +37,9 @@ export interface Questline {
 export interface QuestlineInfo {
   id: string;
   name: string;
+  updated: string;
+  totalQuests: number;
+  completedQuests: number;
 }
 
 export interface ExposedQuestBoard {

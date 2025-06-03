@@ -17,7 +17,7 @@
   const questBoardRef = ref<ExposedQuestBoard | null>(null);
 
   onMounted(async () => {
-    await store.fetchAllQuestlines(); // fetch all for load modal
+    await store.fetchAllQuestlineInfos(); // fetch all for load modal
 
     // load questline using cached id
     const cachedId = localStorage.getItem(store.LAST_ACTIVE_QUESTLINE_ID_KEY);

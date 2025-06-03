@@ -15,7 +15,7 @@ export const useQuestStore = defineStore('quest', () => {
   const LAST_ACTIVE_QUESTLINE_ID_KEY = "lastActiveQuestlineId";
   
   // state
-  const allQuestlines = ref<QuestlineInfo[]>([]);
+  const allQuestlineInfos = ref<QuestlineInfo[]>([]);
   const selectedQuestForEdit = ref<Quest | null>(null);
   const hasUnsavedChanges = ref(false);
 
@@ -124,9 +124,8 @@ export const useQuestStore = defineStore('quest', () => {
 
     return currQuestline.value.dependencies.map((dep: Dependency, idx: number): Edge => {
       const isDirectlyHovered = currHoveredEdge === getEdgeId(dep, idx);
-      const isConnectedToHoveredNode = currHoveredNode && (dep.from === currHoveredNode || dep.to === currHoveredEdge);
-      const shouldUseHightlight = isDirectlyHovered || isConnectedToHoveredNode;
-      const strokeWidth = shouldUseHightlight ? 2.5 : 1.5;
+      const isDownstreamFromNode = currHoveredNode && (dep.from === currHoveredNode || dep.to === currHoveredEdge);
+      const strokeWidth = (isDirectlyHovered || isDownstreamFromNode) ? 2.5 : 1.5;
 
       return {
         id: getEdgeId(dep, idx),
@@ -170,14 +169,14 @@ export const useQuestStore = defineStore('quest', () => {
     return `edge-${dep.from}-${dep.to}-${idx}`
   }
 
-  async function fetchAllQuestlines() {
+  async function fetchAllQuestlineInfos() {
     isLoading.value = true;
     resetMessages();
     try {
-      allQuestlines.value = (await apiService.getQuestlines()) || [];
+      allQuestlineInfos.value = (await apiService.getQuestlines()) || [];
     } catch (e) {
       handleError(e, 'Failed to load questlines');
-      allQuestlines.value = [];
+      allQuestlineInfos.value = [];
     } finally {
       isLoading.value = false;
     }
@@ -242,7 +241,7 @@ export const useQuestStore = defineStore('quest', () => {
 
     try {
       let saved: Questline;
-      const isExisting = (allQuestlines.value as Questline[]).some((q: Questline) => q.id === currQuestline.value.id);
+      const isExisting = (allQuestlineInfos.value as QuestlineInfo[]).some((q: QuestlineInfo) => q.id === currQuestline.value.id);
 
       if (currQuestline.value.id && isExisting) {
         saved = await apiService.updateQuestline(currQuestline.value.id, currQuestline.value);
@@ -259,7 +258,7 @@ export const useQuestStore = defineStore('quest', () => {
       if (saved.id) {
         localStorage.setItem(LAST_ACTIVE_QUESTLINE_ID_KEY, saved.id);
       }
-      await fetchAllQuestlines();
+      await fetchAllQuestlineInfos();
       markClean();
       handleSuccess('Questline saved.');
 
@@ -272,7 +271,7 @@ export const useQuestStore = defineStore('quest', () => {
 
   async function deleteCurrentQuestline() {
     const id = currQuestline.value.id;
-    if (!id || !(allQuestlines.value as Questline[]).some((q: Questline) => q.id === id)) {
+    if (!id || !(allQuestlineInfos.value as QuestlineInfo[]).some((q: QuestlineInfo) => q.id === id)) {
       errorMsg.value = 'Please save before deleting, or select a saved questline';
       successMsg.value = null;
       setTimeout(() => errorMsg.value = null, ERROR_MSG_WAIT_MS);
@@ -291,7 +290,7 @@ export const useQuestStore = defineStore('quest', () => {
       if (cachedId === id) {
         localStorage.removeItem(LAST_ACTIVE_QUESTLINE_ID_KEY);
       }
-      await fetchAllQuestlines();
+      await fetchAllQuestlineInfos();
       await loadQuestline(null); // load empty
 
     } catch (e) {
@@ -536,7 +535,7 @@ export const useQuestStore = defineStore('quest', () => {
 
   function openLoadModal() {
     showLoadModal.value = true;
-    fetchAllQuestlines();
+    fetchAllQuestlineInfos();
   }
 
   function closeLoadModal() {
@@ -562,7 +561,7 @@ export const useQuestStore = defineStore('quest', () => {
   }
 
   function triggerExport(fmt: string) {
-    if (!currQuestline.value.id || !(allQuestlines.value as Questline[]).some((q: Questline) => q.id === currQuestline.value.id)) {
+    if (!currQuestline.value.id || !(allQuestlineInfos.value as QuestlineInfo[]).some((q: QuestlineInfo) => q.id === currQuestline.value.id)) {
       errorMsg.value = 'Please save questline before exporting';
       setTimeout(() => errorMsg.value = null, ERROR_MSG_WAIT_MS);
       return;
@@ -598,7 +597,7 @@ export const useQuestStore = defineStore('quest', () => {
     // constants
     LAST_ACTIVE_QUESTLINE_ID_KEY,
     // properties
-    currQuestline, allQuestlines, 
+    currQuestline, allQuestlineInfos, 
     isLoading, errorMsg, successMsg, 
     nodes, edges, selectedQuestForEdit,
     showQuestEditor, showLoadModal, showHelpModal, isDarkMode, 
@@ -606,7 +605,7 @@ export const useQuestStore = defineStore('quest', () => {
     hasUnsavedChanges,
     // functions
     handleSuccess, handleError,
-    fetchAllQuestlines, loadQuestline, saveCurrentQuestline, deleteCurrentQuestline,
+    fetchAllQuestlineInfos, loadQuestline, saveCurrentQuestline, deleteCurrentQuestline,
     addQuestNode, updateQuestPosition, addQuestDependency, updateQuestlineName,
     removeQuestNodes, removeQuestDependencies,
     addObjective, removeObjective,

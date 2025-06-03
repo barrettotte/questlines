@@ -1,13 +1,13 @@
 <script setup lang="ts">
   import { ref } from 'vue';
   import { storeToRefs } from 'pinia';
-  import { X, Upload } from 'lucide-vue-next';
+  import { X, Upload, ListChecks } from 'lucide-vue-next';
 
   import { useQuestStore } from '../stores/questStore';
   import type { Questline } from '@/types';
 
   const store = useQuestStore();
-  const { allQuestlines, showLoadModal, isLoading } = storeToRefs(store);
+  const { allQuestlineInfos, showLoadModal, isLoading } = storeToRefs(store);
 
   const fileInputRef = ref<HTMLInputElement | null>(null);
 
@@ -68,15 +68,21 @@
 
       <div class="modal-body">
         <div class="load-from-server">
-          <p v-if="!isLoading && (!allQuestlines || allQuestlines.length === 0)" class="empty-list-message">
+          <p v-if="!isLoading && (!allQuestlineInfos || allQuestlineInfos.length === 0)" class="empty-list-message">
             No saved quest lines found on server.
           </p>
           <div v-if="isLoading" class="loading-text">Loading from server...</div>
 
-          <ul v-if="!isLoading && allQuestlines && allQuestlines.length > 0" class="modal-list">
-            <li v-for="ql in allQuestlines" :key="ql.id" @click="selectAndLoad(ql.id)">
-              <span>{{ ql.name || 'Untitled' }}</span>
-              <span class="questline-id-display">[{{ ql.id.slice(0,8)}}...]</span>
+          <ul v-if="!isLoading && allQuestlineInfos && allQuestlineInfos.length > 0" class="modal-list">
+            <li v-for="ql in allQuestlineInfos" :key="ql.id" @click="selectAndLoad(ql.id)">
+              <span class="questline-name">{{ ql.name || 'Untitled' }}</span>
+              <div class="questline-meta">
+                <div class="questline-progress-container" title="Completed Quests / Total Quests">
+                  <ListChecks :size="14" class="progress-list-icon"/>
+                  <span>{{ ql.completedQuests }}/{{ ql.totalQuests }}</span>
+                </div>
+                <span class="questline-id-display">[{{ ql.id.slice(0,8) }}...]</span>
+              </div>
             </li>
           </ul>
         </div>
@@ -132,9 +138,46 @@
     background-color: rgba(255,255,255,0.08);
   }
 
-  .questline-id-display {
-    font-size: 0.8em;
+  .questline-name {
+    font-weight: 500;
+    margin-right: 10px;
+    flex-shrink: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .questline-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.85em;
     color: var(--text-color);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .questline-progress-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 3px 6px;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+    font-size: 0.95em;
+  }
+  .html.dark .questline-progress-container {
+    background-color: rgba(0, 0, 0, 0.2);
+  }
+
+  .progress-list-icon {
+    flex-shrink: 0;
+  }
+
+  .questline-id-display {
+    padding-left: 6px;
+    color: var(--text-color);
+    opacity: 0.8;
   }
 
   .modal-footer {
