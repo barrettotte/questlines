@@ -1,7 +1,7 @@
 <script setup lang="ts">
   import { computed } from 'vue';
   import { storeToRefs } from 'pinia';
-  import { Download, HelpCircle, ListChecks, Moon, Plus, Save, Sun, Trash2, UploadCloud, Zap } from 'lucide-vue-next';
+  import { Download, HelpCircle, ListChecks, Moon, Plus, Save, Sun, UploadCloud, Zap, ScrollText, Trash2 } from 'lucide-vue-next';
 
   import { useQuestStore } from '../stores/questStore';
   import type { ExposedQuestBoard } from '../types';
@@ -33,7 +33,12 @@
 
 <template>
   <div class="toolbar">
-    <span class="toolbar-title">Questlines</span>
+    <div class="toolbar-title-container">
+      <ScrollText :size="20" class="toolbar-title-icon"/>
+      <span class="toolbar-title">Questlines</span>
+    </div>
+    <div class="toolbar-spacer"></div>
+
     <input type="text" class="toolbar-input questline-name-input" placeholder="Questline Name" name="questline-name" v-model="currQuestline.name"/>
 
     <!-- Questline stats -->
@@ -41,7 +46,7 @@
       <ListChecks :size="16" class="stats-icon"/>
       <span>{{ questlineProgress }} </span>
     </div>
-    <div class="toolbar-spacer"></div>
+    <div class="toolbar-divider"></div>
 
     <!-- Questline actions -->
     <div class="toolbar-group">
@@ -103,11 +108,25 @@
     transition: background-color 0.2s ease, color 0.2s ease;
   }
 
+  .toolbar-title-container {
+    display: flex;
+    align-items: center;
+    margin-right: 20px;
+  }
+
+  .toolbar-title-icon {
+    margin-right: 8px;
+    color: var(--toolbar-text);
+    flex-shrink: 0;
+    position: relative;
+    top: 2px;
+  }
+
   .toolbar-title {
     font-size: 1.2em;
     font-weight: bold;
-    margin-right: 20px;
     white-space: nowrap;
+    color: var(--toolbar-text);
   }
 
   .toolbar-input {

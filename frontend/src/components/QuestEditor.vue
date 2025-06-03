@@ -167,28 +167,25 @@
 
   .completion-status-editor {
     margin-top: 5px;
+    padding-bottom: 5px;
     display: flex;
     align-items: center;
     gap: 8px;
   }
 
   .completion-status-editor .status-label {
-    display: block;
     font-weight: 500;
-    margin-bottom: 5px;
     margin-right: 8px;
     flex-shrink: 0;
   }
   .status-completed {
     color: var(--success-color);
-    font-weight: bold;
   }
   .status-pending {
-    color: var(--secondary-color);
+    color: var(--warning-color);
   }
   .status-blocked {
     color: var(--danger-color);
-    font-size: 0.9em;
   }
 
   .color-selector-group {
