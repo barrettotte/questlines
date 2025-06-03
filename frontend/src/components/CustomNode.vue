@@ -96,7 +96,7 @@
     flex-direction: column;
     min-width: 200px;
     max-width: 275px;
-    min-height: 70px;
+    min-height: 90px;
     box-sizing: border-box;
     padding: 10px 12px;
     

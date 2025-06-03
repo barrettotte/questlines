@@ -1,13 +1,13 @@
 <script setup lang="ts">
   import { computed } from 'vue';
   import { storeToRefs } from 'pinia';
-  import { Download, HelpCircle, ListChecks, Moon, Plus, Save, Sun, UploadCloud, Zap, ScrollText, Trash2 } from 'lucide-vue-next';
+  import { Download, HelpCircle, ListChecks, Moon, Plus, Save, Sun, UploadCloud, Zap, ScrollText, Trash2, FileCheck, FileText } from 'lucide-vue-next';
 
   import { useQuestStore } from '../stores/questStore';
   import type { ExposedQuestBoard } from '../types';
 
   const store = useQuestStore();
-  const { currQuestline, isLoading, isDarkMode } = storeToRefs(store);
+  const { currQuestline, isLoading, isDarkMode, hasUnsavedChanges } = storeToRefs(store);
 
   const props = defineProps<{ questBoardInstance: ExposedQuestBoard | null }>();
 
@@ -29,6 +29,11 @@
     }
   };
 
+  const handleNameInput = (event: Event) => {
+    const target = event.target as HTMLInputElement;
+    store.updateQuestlineName(target.value);
+  };
+
 </script>
 
 <template>
@@ -39,7 +44,13 @@
     </div>
     <div class="toolbar-spacer"></div>
 
-    <input type="text" class="toolbar-input questline-name-input" placeholder="Questline Name" name="questline-name" v-model="currQuestline.name"/>
+    <input type="text" class="toolbar-input questline-name-input" placeholder="Questline Name" name="questline-name"
+      v-model="currQuestline.name" @input="handleNameInput"
+    />
+    <div class="save-status-container" :title="hasUnsavedChanges ? 'Unsaved changes' : 'All changes saved'">
+      <FileText v-if="hasUnsavedChanges" :size="24" class="unsaved-icon"/>
+      <FileCheck v-else :size="24" class="saved-icon"/>
+    </div>
 
     <!-- Questline stats -->
     <div v-if="currQuestline && currQuestline.id" class="quest-stats" title="Questline Progress">
@@ -58,15 +69,15 @@
         <UploadCloud :size="16" class="btn-icon"/> Load
       </button>
 
-      <button class="btn btn-success" @click="store.saveCurrentQuestline" :disabled="isLoading" title="Save Questline">
-        <Save :size="16" class="btn-icon"/> {{ isLoading ? 'Saving...' : 'Save' }}
+      <button class="btn btn-success" @click="store.saveCurrentQuestline" title="Save Questline" :disabled="isLoading">
+        <Save :size="16" class="btn-icon"/> Save
       </button>
 
-      <button class="btn btn-danger" @click="store.deleteCurrentQuestline" :disabled="isLoading" title="Delete Saved Questline">
+      <button class="btn btn-danger" @click="store.deleteCurrentQuestline" title="Delete Saved Questline" :disabled="isLoading">
         <Trash2 :size="16" class="btn-icon"/> Delete
       </button>
 
-      <button class="btn btn-success" @click="store.triggerExport('json')" title="Export Questline to JSON">
+      <button class="btn btn-success" @click="store.triggerExport('json')" title="Export Questline to JSON" :disabled="isLoading">
         <Download :size="16" class="btn-icon"/> Export
       </button>
     </div>
@@ -82,13 +93,13 @@
 
     <!-- Misc actions -->
     <div class="toolbar-group">
-      <button class="btn btn-secondary" @click="store.openHelpModal()" title="Help & About">
-        <HelpCircle :size="16" class="btn-icon" /> Help
+      <button class="btn btn-secondary icon-only" @click="store.openHelpModal()" title="Help & About">
+        <HelpCircle :size="18" class="btn-icon" />
       </button>
 
       <button class="btn btn-secondary icon-only" @click="store.toggleDarkMode" :title="isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'">
         <Moon v-if="!isDarkMode" :size="16" class="btn-icon"/>
-        <Sun v-else :size="16" class="btn-icon"/>
+        <Sun v-else :size="18" class="btn-icon"/>
       </button>
     </div>
   </div>
@@ -143,6 +154,7 @@
   .toolbar-group {
     display: flex;
     align-items: center;
+    flex-shrink: 0;
   }
 
   .toolbar-divider {
@@ -166,7 +178,25 @@
     flex-grow: 0;
     flex-shrink: 0;
     flex-basis: 250px;
+    margin-right: 8px;
+  }
+
+  .save-status-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
     margin-right: 10px;
+    flex-shrink: 0;
+  }
+
+  .unsaved-icon {
+    color: var(--warning-color);
+  }
+
+  .saved-icon {
+    color: var(--success-color);
   }
 
   .quest-stats {

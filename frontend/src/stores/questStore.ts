@@ -1,4 +1,4 @@
-import { ref, computed, nextTick } from 'vue';
+import { ref, computed, nextTick, watch } from 'vue';
 import { defineStore } from 'pinia';
 import { type Connection, type Node, type Edge, MarkerType } from '@vue-flow/core';
 import { v4 as uuidv4 } from 'uuid';
@@ -17,6 +17,7 @@ export const useQuestStore = defineStore('quest', () => {
   // state
   const allQuestlines = ref<QuestlineInfo[]>([]);
   const selectedQuestForEdit = ref<Quest | null>(null);
+  const hasUnsavedChanges = ref(false);
 
   const hoveredNodeId = ref<string | null>(null);
   const hoveredEdgeId = ref<string | null>(null);
@@ -87,6 +88,24 @@ export const useQuestStore = defineStore('quest', () => {
       }
     });
   }
+
+  function markDirty() {
+    if (!hasUnsavedChanges.value) {
+      hasUnsavedChanges.value = true;
+    }
+  }
+
+  function markClean() {
+    if (hasUnsavedChanges.value) {
+      hasUnsavedChanges.value = false;
+    }
+  }
+
+  watch(currQuestline, (newVal, oldVal) => {
+    if (oldVal && oldVal.id && newVal && newVal.id && oldVal.id === newVal.id) {
+      markDirty();
+    }
+  }, { deep: true });
 
   const nodes = computed<Node[]>(() =>
     currQuestline.value.quests.map((q: Quest): Node<Quest> => ({
@@ -178,20 +197,13 @@ export const useQuestStore = defineStore('quest', () => {
       if (!id) {
         currQuestline.value = blankQuestline;
         localStorage.removeItem(LAST_ACTIVE_QUESTLINE_ID_KEY);
+        markDirty();
       } else {
         const data = await apiService.getQuestline(id);
         currQuestline.value = data;
         localStorage.setItem(LAST_ACTIVE_QUESTLINE_ID_KEY, id);
+        markClean();
       }
-
-      // reset editor/selection state
-      if (typeof selectedQuestForEdit.value !== 'undefined') {
-        selectedQuestForEdit.value = null;
-      }
-      if (typeof showQuestEditor.value !== 'undefined') {
-        showQuestEditor.value = false;
-      }
-      await nextTick();
     } catch (e) {
       handleError(e, `Failed to load questline ${id}`);
       localStorage.removeItem(LAST_ACTIVE_QUESTLINE_ID_KEY);
@@ -199,6 +211,7 @@ export const useQuestStore = defineStore('quest', () => {
       // fallback to empty questline
       if (currQuestline.value.id === id || id !== null) {
         currQuestline.value = blankQuestline;
+        markDirty();
       }
     } finally {
       isLoading.value = false;
@@ -213,7 +226,7 @@ export const useQuestStore = defineStore('quest', () => {
       dependencies: loaded.dependencies || [],
     };
     localStorage.removeItem(LAST_ACTIVE_QUESTLINE_ID_KEY);
-
+    markDirty();
     handleSuccess(`Questline loaded from file`);
     return true;
   }
@@ -247,6 +260,7 @@ export const useQuestStore = defineStore('quest', () => {
         localStorage.setItem(LAST_ACTIVE_QUESTLINE_ID_KEY, saved.id);
       }
       await fetchAllQuestlines();
+      markClean();
       handleSuccess('Questline saved.');
 
     } catch (e) {
@@ -301,12 +315,14 @@ export const useQuestStore = defineStore('quest', () => {
       completed: false,
     };
     currQuestline.value.quests.push(newQuest);
+    markDirty();
   }
 
   function updateQuestPosition(nodeId: string, newPos: { x: number, y: number }) {
     const quest = currQuestline.value.quests.find((q: Quest) => q.id === nodeId);
     if (quest) {
       quest.position = newPos;
+      markDirty();
     }
   }
 
@@ -315,6 +331,7 @@ export const useQuestStore = defineStore('quest', () => {
     if (!quest) {
       return;
     }
+    const oldStatus = quest.completed;
 
     if (newStatus) {
       if (canCompleteQuest(questId)) {
@@ -329,6 +346,10 @@ export const useQuestStore = defineStore('quest', () => {
       } else {
         quest.completed = false; // incomplete
       }
+    }
+
+    if (quest.completed !== oldStatus) {
+      markDirty();
     }
   }
 
@@ -349,6 +370,7 @@ export const useQuestStore = defineStore('quest', () => {
 
     const newDep: Dependency = { from: conn.source, to: conn.target };
     currQuestline.value.dependencies.push(newDep);
+    markDirty();
   }
 
   function addObjective(questId: string, text?: string) {
@@ -363,14 +385,20 @@ export const useQuestStore = defineStore('quest', () => {
         completed: false,
         sortIndex: quest.objectives.length,
       });
+      markDirty();
     }
   }
 
   function removeObjective(questId: string, objectiveId: string) {
     const quest = currQuestline.value.quests.find(q => q.id === questId);
     if (quest && quest.objectives) {
+      const initialLength = quest.objectives.length;
       quest.objectives = quest.objectives.filter(o => o.id !== objectiveId);
       // TODO: recalculate sortIndex?
+
+      if (quest.objectives.length !== initialLength) {
+        markDirty();
+      }
     }
   }
 
@@ -378,6 +406,8 @@ export const useQuestStore = defineStore('quest', () => {
     if (nodeIds.length === 0) {
       return;
     }
+    const initialQuestCount = currQuestline.value.quests.length;
+    const initialDepCount = currQuestline.value.dependencies.length;
     const questsBeforeDelete = [...currQuestline.value.quests];
     const depsBeforeDelete = [...currQuestline.value.dependencies];
     const downstreamQuests = new Set<string>();
@@ -399,6 +429,10 @@ export const useQuestStore = defineStore('quest', () => {
     currQuestline.value.quests = currQuestline.value.quests.filter(q => !nodeIds.includes(q.id));
     currQuestline.value.dependencies = currQuestline.value.dependencies.filter(d => !nodeIds.includes(d.from) && !nodeIds.includes(d.to));
 
+    if (currQuestline.value.quests.length !== initialQuestCount || currQuestline.value.dependencies.length !== initialDepCount) {
+      markDirty();
+    }
+
     // downstream quests that were completed need to be marked incomplete
     downstreamQuests.forEach(downstreamQuestId => {
       const quest = currQuestline.value.quests.find(q => q.id === downstreamQuestId);
@@ -413,6 +447,7 @@ export const useQuestStore = defineStore('quest', () => {
     if (edgeIds.length === 0) {
       return;
     }
+    const initialDepCount = currQuestline.value.dependencies.length;
     const quests = currQuestline.value.quests;
     const depsToCascade = new Set<string>();
 
@@ -433,6 +468,10 @@ export const useQuestStore = defineStore('quest', () => {
       }
     });
     currQuestline.value.dependencies = remainingDeps;
+
+    if (currQuestline.value.dependencies.length !== initialDepCount) {
+      markDirty();
+    }
 
     // update downstream quests connected to deleted dependencies to uncomplete
     depsToCascade.forEach(questId => {
@@ -478,12 +517,21 @@ export const useQuestStore = defineStore('quest', () => {
     const afterUpdate = currQuestline.value.quests[idx];
     const nowCompleted = canCompleteQuest(afterUpdate.id);
 
+    markDirty();
+
     // quest was complete, but editor changes made it incomplete
     if (wasOriginallyCompleted && !nowCompleted) {
       afterUpdate.completed = false;
       cascadeUncomplete(afterUpdate.id);
     }
     closeQuestEditor();
+  }
+
+  function updateQuestlineName(name: string) {
+    if (currQuestline.value && currQuestline.value.name !== name) {
+      currQuestline.value.name = name;
+      markDirty();
+    }
   }
 
   function openLoadModal() {
@@ -555,10 +603,11 @@ export const useQuestStore = defineStore('quest', () => {
     nodes, edges, selectedQuestForEdit,
     showQuestEditor, showLoadModal, showHelpModal, isDarkMode, 
     hoveredNodeId, hoveredEdgeId,
+    hasUnsavedChanges,
     // functions
     handleSuccess, handleError,
     fetchAllQuestlines, loadQuestline, saveCurrentQuestline, deleteCurrentQuestline,
-    addQuestNode, updateQuestPosition, addQuestDependency, 
+    addQuestNode, updateQuestPosition, addQuestDependency, updateQuestlineName,
     removeQuestNodes, removeQuestDependencies,
     addObjective, removeObjective,
     openQuestForEdit, openLoadModal, openHelpModal, isAnyModalOpen,
