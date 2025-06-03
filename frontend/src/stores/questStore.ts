@@ -205,6 +205,19 @@ export const useQuestStore = defineStore('quest', () => {
     }
   }
 
+  function setQuestlineFromLoadedData(loaded: Questline): boolean {
+    currQuestline.value = {
+      ...loaded,
+      id: loaded.id || uuidv4(),
+      quests: loaded.quests || [],
+      dependencies: loaded.dependencies || [],
+    };
+    localStorage.removeItem(LAST_ACTIVE_QUESTLINE_ID_KEY);
+
+    handleSuccess(`Questline loaded from file`);
+    return true;
+  }
+
   async function saveCurrentQuestline() {
     if (!currQuestline.value.name.trim()) {
       errorMsg.value = 'Questline name cannot be empty';
@@ -543,6 +556,7 @@ export const useQuestStore = defineStore('quest', () => {
     showQuestEditor, showLoadModal, showHelpModal, isDarkMode, 
     hoveredNodeId, hoveredEdgeId,
     // functions
+    handleSuccess, handleError,
     fetchAllQuestlines, loadQuestline, saveCurrentQuestline, deleteCurrentQuestline,
     addQuestNode, updateQuestPosition, addQuestDependency, 
     removeQuestNodes, removeQuestDependencies,
@@ -550,7 +564,7 @@ export const useQuestStore = defineStore('quest', () => {
     openQuestForEdit, openLoadModal, openHelpModal, isAnyModalOpen,
     closeQuestEditor, closeLoadModal, closeHelpModal, closeAllModals,
     updateQuestDetails, setQuestCompleted, canCompleteQuest,
-    triggerExport, toggleDarkMode, 
+    triggerExport, toggleDarkMode, setQuestlineFromLoadedData,
     setHoveredNodeId, setHoveredEdgeId,
   };
 });
