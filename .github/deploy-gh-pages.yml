@@ -22,11 +22,11 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -37,7 +37,7 @@ jobs:
       - name: Install frontend deps
         working-directory: ./frontend
         run: npm ci
-      
+
       - name: Build browser-only frontend
         working-directory: ./frontend
         run: npm run build:browser
@@ -45,7 +45,7 @@ jobs:
           VITE_APP_MODE: browser_only
           GITHUB_DEPLOY: 'true'
           GITHUB_REPO_NAME: ${{ github.event.repository.name }}
-      
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
@@ -53,7 +53,7 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./frontend/dist
-      
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
