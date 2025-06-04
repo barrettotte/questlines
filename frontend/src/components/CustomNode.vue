@@ -53,7 +53,6 @@
     :class="{ 'is-selected': selected, 'is-dragging': dragging, 'is-completed': questData.completed }"
   >
     <div class="quest-header">
-      <!-- <CheckCircle v-if="questData.completed" :size="13" class="completed-icon"/> -->
       {{ questData.title || 'Untitled' }}
     </div>
     <div class="quest-spacer"></div>

@@ -84,17 +84,14 @@ func main() {
 
 	// handle requests
 	r.HandleFunc("/*", func(w http.ResponseWriter, r *http.Request) {
-		// If API, let Chi handle it (it should have already, so this 404s unhandled API)
+
+		// handle API requests
 		if strings.HasPrefix(r.URL.Path, baseApiPrefix) {
 			http.NotFound(w, r)
 			return
 		}
 
-		// Get the clean path relative to distFS
 		fsPath := strings.TrimPrefix(r.URL.Path, "/")
-
-		// Try to open the file from the embedded FS.
-		// We do this mainly to check if it exists or not.
 		f, err := distFS.Open(fsPath)
 
 		// if file does not exists or base url, serve default

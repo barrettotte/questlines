@@ -4,7 +4,7 @@ import type { Questline, QuestlineInfo, Quest } from '@/types';
 import type { IQuestlineService } from './questlineService.types';
 
 const QUESTLINES_LOCAL_KEY = 'questlines-app_questlines';
-const LAST_ACTIVE_QUESTLINE_ID_KEY = "lastActiveQuestlineId";
+const LAST_ACTIVE_QUESTLINE_ID_KEY = "lastActiveQuestlineId"; // questlineStore.ts
 
 const demoQuestline: Questline = {
   id: 'demo-questline-id',

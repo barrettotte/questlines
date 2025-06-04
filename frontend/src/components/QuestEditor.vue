@@ -63,7 +63,6 @@
   const handleRemoveObjective = (objectiveId: string) => {
     if (localQuestData.value && localQuestData.value.objectives) {
       localQuestData.value.objectives = localQuestData.value.objectives.filter(o => o.id !== objectiveId);
-      // TODO: recalculate sortIndex?
     }
   };
 

@@ -393,7 +393,6 @@ export const useQuestlineStore = defineStore('questline', () => {
     if (quest && quest.objectives) {
       const initialLength = quest.objectives.length;
       quest.objectives = quest.objectives.filter(o => o.id !== objectiveId);
-      // TODO: recalculate sortIndex?
 
       if (quest.objectives.length !== initialLength) {
         markDirty();
