@@ -2,9 +2,9 @@
   import { storeToRefs } from 'pinia';
   import { X, Keyboard, Info } from 'lucide-vue-next';
 
-  import { useQuestStore } from '../stores/questStore';
+  import { useQuestlineStore } from '../stores/questlineStore';
 
-  const store = useQuestStore();
+  const store = useQuestlineStore();
   const { showHelpModal } = storeToRefs(store);
 
 </script>

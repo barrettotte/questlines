@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:browser": "vite --mode browseronly",
     "build": "vue-tsc -b && vite build",
-    "build_dev": "vue-tsc -b && vite build --mode development",
+    "build:browser": "vue-tsc -b && vite build --mode browseronly",
     "preview": "vite preview",
     "type-check": "vue-tsc --build",
     "lint": "eslint . --fix",

@@ -24,7 +24,7 @@ type Objective struct {
 
 func (o Objective) String() string {
 	return fmt.Sprintf(
-		"Objective{Id: %v, QuestId: %v, Text: %v, Completed: %v, SortIndex: %d}",
+		"Objective{Id: '%v', QuestId: '%v', Text: %v, Completed: %v, SortIndex: %d}",
 		o.Id, o.QuestId, o.Text, o.Completed, o.SortIndex,
 	)
 }
@@ -42,7 +42,7 @@ type Quest struct {
 
 func (q Quest) String() string {
 	return fmt.Sprintf(
-		"Quest{Id: %q, QuestlineId: %v, Title: %v, Description: %v, Position: %v, Color: %v, Objectives: %v, Completed: %v}",
+		"Quest{Id: %q, QuestlineId: '%v', Title: '%v', Description: '%v', Position: %v, Color: '%v', Objectives: %v, Completed: %v}",
 		q.Id, q.QuestlineId, q.Title, q.Description, q.Position, q.Color, q.Objectives, q.Completed,
 	)
 }
@@ -54,7 +54,7 @@ type Dependency struct {
 }
 
 func (d Dependency) String() string {
-	return fmt.Sprintf("Dependency{QuestlineId: %v, From: %v, To: %v}", d.QuestlineId, d.From, d.To)
+	return fmt.Sprintf("Dependency{QuestlineId: '%v', From: '%v', To: '%v'}", d.QuestlineId, d.From, d.To)
 }
 
 type Questline struct {
@@ -68,7 +68,7 @@ type Questline struct {
 
 func (ql Questline) String() string {
 	return fmt.Sprintf(
-		"Questline{Id: %v, Name: %v, Quests: %v, Dependencies: %v, Created: %v, Updated: %v}",
+		"Questline{Id: '%v', Name: '%v', Quests: %v, Dependencies: %v, Created: %v, Updated: %v}",
 		ql.Id, ql.Name, ql.Quests, ql.Dependencies, ql.Created.Format(time.RFC3339), ql.Updated.Format(time.RFC3339),
 	)
 }
@@ -82,7 +82,7 @@ type QuestlineInfo struct {
 }
 
 func (q QuestlineInfo) String() string {
-	return fmt.Sprintf("QuestlineInfo{Id: %v, Name: %v, Updated: %v, TotalQuests: %d, CompletedQuests: %d}",
+	return fmt.Sprintf("QuestlineInfo{Id: '%v', Name: '%v', Updated: %v, TotalQuests: %d, CompletedQuests: %d}",
 		q.Id, q.Name, q.Updated.Format(time.RFC3339), q.TotalQuests, q.CompletedQuests,
 	)
 }

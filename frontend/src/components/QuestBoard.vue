@@ -8,11 +8,11 @@
 
   import { storeToRefs } from 'pinia';
 
-  import { useQuestStore } from '../stores/questStore';
+  import { useQuestlineStore } from '../stores/questlineStore';
   import CustomEdge from './CustomEdge.vue';
   import CustomNode from './CustomNode.vue';
 
-  const store = useQuestStore();
+  const store = useQuestlineStore();
   const { nodes: storeNodes, edges: storeEdges, isDarkMode, } = storeToRefs(store);
   const {
     dimensions, viewport, getSelectedNodes, getSelectedEdges,

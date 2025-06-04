@@ -19,7 +19,7 @@ build:	clean	build_vue	build_go
 build_vue:
 	@echo "Building frontend..."
 	npm --prefix $(VUE_DIR) i
-	npm --prefix $(VUE_DIR) run build_dev
+	npm --prefix $(VUE_DIR) run build
 
 .PHONY:	build_go
 build_go:
@@ -38,3 +38,8 @@ image:
 .PHONY: run_docker
 run_docker:
 	docker run -d -p 8080:8080 --name questlines-app questlines:latest
+
+.PHONY: browser_only
+browser_only:
+	npm --prefix $(VUE_DIR) i
+	npm --prefix $(VUE_DIR) run dev:browser

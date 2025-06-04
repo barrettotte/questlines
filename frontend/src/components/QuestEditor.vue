@@ -4,10 +4,10 @@
   import { TrashIcon, X } from 'lucide-vue-next';
   import { v4 as uuidv4 } from 'uuid';
 
-  import { useQuestStore } from '../stores/questStore';
+  import { useQuestlineStore } from '../stores/questlineStore';
   import type { Quest } from '../types';
 
-  const store = useQuestStore();
+  const store = useQuestlineStore();
   const { selectedQuestForEdit, showQuestEditor } = storeToRefs(store);
 
   const localQuestData = ref<Quest | null>(null);

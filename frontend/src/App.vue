@@ -8,10 +8,10 @@
   import LoadModal from './components/LoadModal.vue';
   import HelpModal from './components/HelpModal.vue';
 
-  import { useQuestStore } from './stores/questStore';
+  import { useQuestlineStore } from './stores/questlineStore';
   import type { ExposedQuestBoard } from './types';
 
-  const store = useQuestStore();
+  const store = useQuestlineStore();
   const { errorMsg, successMsg, isLoading, isDarkMode } = storeToRefs(store);
 
   const questBoardRef = ref<ExposedQuestBoard | null>(null);

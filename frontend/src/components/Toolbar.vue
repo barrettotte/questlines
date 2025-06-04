@@ -3,10 +3,10 @@
   import { storeToRefs } from 'pinia';
   import { Download, HelpCircle, ListChecks, Moon, Plus, Save, Sun, UploadCloud, Zap, ScrollText, Trash2, FileCheck, FileText } from 'lucide-vue-next';
 
-  import { useQuestStore } from '../stores/questStore';
+  import { useQuestlineStore } from '../stores/questlineStore';
   import type { ExposedQuestBoard } from '../types';
 
-  const store = useQuestStore();
+  const store = useQuestlineStore();
   const { currQuestline, isLoading, isDarkMode, hasUnsavedChanges } = storeToRefs(store);
 
   const props = defineProps<{ questBoardInstance: ExposedQuestBoard | null }>();

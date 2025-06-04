@@ -3,10 +3,10 @@ import { defineStore } from 'pinia';
 import { type Connection, type Node, type Edge, MarkerType } from '@vue-flow/core';
 import { v4 as uuidv4 } from 'uuid';
 
-import { apiService } from '../services/api';
+import { questlineApiService } from '../services/questline';
 import type { Questline, Quest, Dependency, QuestlineInfo, Position as QuestPosition } from '../types';
 
-export const useQuestStore = defineStore('quest', () => {
+export const useQuestlineStore = defineStore('questline', () => {
 
   // constants
   const ERROR_MSG_WAIT_MS = 3000;
@@ -173,7 +173,7 @@ export const useQuestStore = defineStore('quest', () => {
     isLoading.value = true;
     resetMessages();
     try {
-      allQuestlineInfos.value = (await apiService.getQuestlines()) || [];
+      allQuestlineInfos.value = (await questlineApiService.getQuestlines()) || [];
     } catch (e) {
       handleError(e, 'Failed to load questlines');
       allQuestlineInfos.value = [];
@@ -198,7 +198,7 @@ export const useQuestStore = defineStore('quest', () => {
         localStorage.removeItem(LAST_ACTIVE_QUESTLINE_ID_KEY);
         markDirty();
       } else {
-        const data = await apiService.getQuestline(id);
+        const data = await questlineApiService.getQuestline(id);
         currQuestline.value = data;
         localStorage.setItem(LAST_ACTIVE_QUESTLINE_ID_KEY, id);
         markClean();
@@ -244,14 +244,14 @@ export const useQuestStore = defineStore('quest', () => {
       const isExisting = (allQuestlineInfos.value as QuestlineInfo[]).some((q: QuestlineInfo) => q.id === currQuestline.value.id);
 
       if (currQuestline.value.id && isExisting) {
-        saved = await apiService.updateQuestline(currQuestline.value.id, currQuestline.value);
+        saved = await questlineApiService.updateQuestline(currQuestline.value.id, currQuestline.value);
       } else {
         // don't send client side ID if new
         const toSend = { ...currQuestline.value };
         if (!isExisting) {
           toSend.id = null; // make backend set ID
         }
-        saved = await apiService.createQuestline(toSend);
+        saved = await questlineApiService.createQuestline(toSend);
       }
       currQuestline.value = saved;
 
@@ -284,7 +284,7 @@ export const useQuestStore = defineStore('quest', () => {
     resetMessages();
 
     try {
-      await apiService.deleteQuestline(id);
+      await questlineApiService.deleteQuestline(id);
       const cachedId = localStorage.getItem(LAST_ACTIVE_QUESTLINE_ID_KEY);
 
       if (cachedId === id) {
@@ -566,7 +566,7 @@ export const useQuestStore = defineStore('quest', () => {
       setTimeout(() => errorMsg.value = null, ERROR_MSG_WAIT_MS);
       return;
     }
-    apiService.exportQuestline(currQuestline.value.id, fmt);
+    questlineApiService.exportQuestline(currQuestline.value.id, fmt);
   }
 
   function applyDarkMode(active: boolean) {

@@ -4,7 +4,7 @@
   import { Edit3, Trash2, ClipboardList, CheckCircle, Circle } from 'lucide-vue-next';
 
   import type { Quest } from '../types';
-  import { useQuestStore } from '../stores/questStore';
+  import { useQuestlineStore } from '../stores/questlineStore';
 
   interface CustomNodeProps extends NodeProps {
     data: Quest;
@@ -12,7 +12,7 @@
 
   const props = defineProps<CustomNodeProps>();
 
-  const store = useQuestStore();
+  const store = useQuestlineStore();
   const questData = computed(() => props.data);
 
   const handleEdit = () => {

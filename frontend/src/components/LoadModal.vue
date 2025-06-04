@@ -3,10 +3,10 @@
   import { storeToRefs } from 'pinia';
   import { X, Upload, ListChecks } from 'lucide-vue-next';
 
-  import { useQuestStore } from '../stores/questStore';
+  import { useQuestlineStore } from '../stores/questlineStore';
   import type { Questline } from '@/types';
 
-  const store = useQuestStore();
+  const store = useQuestlineStore();
   const { allQuestlineInfos, showLoadModal, isLoading } = storeToRefs(store);
 
   const fileInputRef = ref<HTMLInputElement | null>(null);
