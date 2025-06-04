@@ -69,7 +69,7 @@
       <div class="modal-body">
         <div class="load-from-server">
           <p v-if="!isLoading && (!allQuestlineInfos || allQuestlineInfos.length === 0)" class="empty-list-message">
-            No saved quest lines found on server.
+            No saved questlines found on server.
           </p>
           <div v-if="isLoading" class="loading-text">Loading from server...</div>
 

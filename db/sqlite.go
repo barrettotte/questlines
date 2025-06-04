@@ -1,11 +1,11 @@
 package db
 
 import (
+	"barrettotte/questlines/models"
 	"database/sql"
 	"embed"
 	"fmt"
 	"log"
-	"questlines/models"
 	"time"
 
 	"github.com/golang-migrate/migrate/v4"

@@ -30,3 +30,11 @@ build_go:
 .PHONY:	run
 run:	build
 	./$(TARGET)
+
+.PHONY:	image
+image:
+	docker build -t questlines:latest .
+
+.PHONY: run_docker
+run_docker:
+	docker run -d -p 8080:8080 --name questlines-app questlines:latest

@@ -19,6 +19,12 @@ make build
 
 # run (frontend is embedded in Go binary)
 make run
+
+# build docker image
+make image
+
+# run in container
+make run_docker
 ```
 
 ## References

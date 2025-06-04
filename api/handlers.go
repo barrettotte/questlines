@@ -1,12 +1,12 @@
 package api
 
 import (
+	"barrettotte/questlines/db"
+	"barrettotte/questlines/models"
 	"database/sql"
 	"encoding/json"
 	"log"
 	"net/http"
-	"questlines/db"
-	"questlines/models"
 
 	"github.com/go-chi/chi"
 )

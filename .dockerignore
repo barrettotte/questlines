@@ -1,0 +1,10 @@
+**/node_modules
+
+temp
+bin
+
+.gitignore
+LICENSE
+Makefile
+*.md
+*.db

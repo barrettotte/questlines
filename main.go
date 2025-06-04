@@ -1,13 +1,14 @@
 package main
 
 import (
+	"barrettotte/questlines/api"
+	"barrettotte/questlines/db"
 	"embed"
+	"flag"
 	"io/fs"
 	"log"
 	"net/http"
 	"os"
-	"questlines/api"
-	"questlines/db"
 	"strings"
 
 	"github.com/go-chi/chi"
@@ -22,14 +23,16 @@ var embeddedFrontend embed.FS
 var embeddedMigrations embed.FS
 
 func main() {
+	dbPath := flag.String("db", "questlines.db", "Path to SQLite database file")
+	flag.Parse()
+
 	port := "8080"
-	dbPath := "questlines.db"
 	migrationsDir := "db/migrations"
 	frontendDir := "frontend/dist"
 	baseApiPrefix := "/api"
 
 	// init db
-	if err := db.InitDB(dbPath, migrationsDir, embeddedMigrations); err != nil {
+	if err := db.InitDB(*dbPath, migrationsDir, embeddedMigrations); err != nil {
 		log.Fatalf("Failed to initialize database: %v", err)
 	}
 	defer db.DB.Close()
